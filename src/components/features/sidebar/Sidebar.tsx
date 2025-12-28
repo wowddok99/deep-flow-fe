@@ -161,7 +161,7 @@ export function Sidebar() {
                                     </Button>
                                 </div>
                              </div>
-                             <p className="text-xs text-muted-foreground truncate pr-6 mt-1">
+                             <p className="text-xs text-muted-foreground line-clamp-2 break-words pr-6 mt-1">
                                 {session.summary || "No summary"}
                              </p>
                              <div className="flex gap-2 mt-2">

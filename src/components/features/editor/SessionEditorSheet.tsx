@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { Edit3, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { extractTextFromContent } from "@/lib/utils"
 
 export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
   const { sessionId, isRunning } = useTimerStore()
@@ -43,9 +44,10 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
     if (!sessionId) return
     setIsSaving(true)
     try {
+        const summary = extractTextFromContent(content);
         await api.logs.update(sessionId, {
             content,
-            summary: "", 
+            summary, 
             tags: session?.tags || []
         })
         isDirtyRef.current = false

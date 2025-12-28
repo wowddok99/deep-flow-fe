@@ -36,7 +36,7 @@ export function Editor({ initialContent, onSave }: EditorProps) {
     content: initialContent || '',
     editorProps: {
       attributes: {
-        class: 'tiptap prose prose-zinc dark:prose-invert focus:outline-none max-w-none min-h-[50vh] p-4',
+        class: 'tiptap prose prose-zinc dark:prose-invert focus:outline-none max-w-none min-h-[50vh] px-4 py-2 [&>*:first-child]:mt-0',
       },
       // Ensure markdown shortcuts are enabled (StarterKit default)
     },
