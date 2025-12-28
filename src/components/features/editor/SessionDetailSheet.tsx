@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Editor } from "./Editor"
 import { api } from "@/lib/api"
 import { Loader2 } from "lucide-react"
+import { extractTextFromContent } from "@/lib/utils"
 
 interface SessionDetailSheetProps {
   sessionId: number | null
@@ -40,15 +41,30 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
   const isDirtyRef = React.useRef(false)
   const timeoutRef = React.useRef<NodeJS.Timeout>(null)
 
+  // Track title state
+  const [title, setTitle] = React.useState("")
+  const titleRef = React.useRef("")
+
+  // Sync title from session
+  React.useEffect(() => {
+    if (session?.title) {
+        setTitle(session.title)
+        titleRef.current = session.title
+    }
+  }, [session?.title])
+
   // Save changes
   const handleSave = async (content: any) => {
     if (!sessionId) return
     setIsSaving(true)
     try {
+        const summary = extractTextFromContent(content);
         await api.logs.update(sessionId, {
             content,
-            summary: "", 
-            tags: session?.tags || []
+            title: titleRef.current, // Use ref
+            summary, 
+            tags: session?.tags || [],
+            imageUrls: session?.imageUrls || []
         })
         isDirtyRef.current = false
         // Refresh list AND detail
@@ -69,6 +85,21 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     timeoutRef.current = setTimeout(() => {
         handleSave(content)
+    }, 1000)
+  }
+
+  const onTitleChange = (newTitle: string) => {
+    setTitle(newTitle)
+    titleRef.current = newTitle
+    isDirtyRef.current = true
+    
+    if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+    }
+    
+    // Auto-save title change with content
+    timeoutRef.current = setTimeout(() => {
+         handleSave(contentRef.current || initialContent)
     }, 1000)
   }
 
@@ -120,6 +151,8 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
             ) : (
                 <Editor 
                     initialContent={initialContent} 
+                    title={title}
+                    onChangeTitle={onTitleChange}
                     onSave={onEditorUpdate} 
                 />
             )}

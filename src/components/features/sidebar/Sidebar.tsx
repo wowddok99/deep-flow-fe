@@ -120,7 +120,9 @@ export function Sidebar() {
                              onClick={() => setSelectedSessionId(session.id)}
                         >
                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-medium">Session #{session.id}</span>
+                                <span className="text-sm font-medium truncate">
+                                    {session.title || `Session #${session.id}`}
+                                </span>
                                 <div className="flex items-center gap-2">
                                     <div className="flex flex-col items-end">
                                         <span className="text-xs text-muted-foreground font-medium">

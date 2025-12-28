@@ -40,6 +40,18 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
   const timeoutRef = React.useRef<NodeJS.Timeout>(null)
 
   // Actual save logic
+  // Track title state
+  const [title, setTitle] = React.useState("")
+  const titleRef = React.useRef("") // Ref to access latest title in timeouts
+  
+  // Sync title from session
+  React.useEffect(() => {
+    if (session?.title) {
+        setTitle(session.title)
+        titleRef.current = session.title
+    }
+  }, [session?.title])
+
   const handleSave = async (content: any) => {
     if (!sessionId) return
     setIsSaving(true)
@@ -47,12 +59,15 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
         const summary = extractTextFromContent(content);
         await api.logs.update(sessionId, {
             content,
+            title: titleRef.current, // Use ref for latest value
             summary, 
-            tags: session?.tags || []
+            tags: session?.tags || [],
+            imageUrls: session?.imageUrls || []
         })
         isDirtyRef.current = false
         // Ensure next fetch gets fresh data
         await queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
+        await queryClient.invalidateQueries({ queryKey: ['sessions'] })
     } catch (e) {
         console.error("Save failed", e)
     } finally {
@@ -72,6 +87,21 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
     // Auto-save after 1s
     timeoutRef.current = setTimeout(() => {
         handleSave(content)
+    }, 1000)
+  }
+
+  const onTitleChange = (newTitle: string) => {
+    setTitle(newTitle)
+    titleRef.current = newTitle // Update ref immediately
+    isDirtyRef.current = true
+    
+    if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+    }
+    
+    // Auto-save title change with content
+    timeoutRef.current = setTimeout(() => {
+         handleSave(contentRef.current || initialContent)
     }, 1000)
   }
 
@@ -127,6 +157,8 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
             ) : (
                 <Editor 
                     initialContent={initialContent} 
+                    title={title}
+                    onChangeTitle={onTitleChange}
                     onSave={onEditorUpdate} 
                 />
             )}

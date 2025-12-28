@@ -12,6 +12,7 @@ export interface SessionSummary {
   startTime: string;
   endTime: string | null;
   durationSeconds: number;
+  title: string | null;
   summary: string | null;
   tags: string[];
   status: 'ONGOING' | 'COMPLETED';
@@ -19,8 +20,10 @@ export interface SessionSummary {
 
 export interface LogUpdateRequest {
   content: object; // Tiptap JSON
+  title: string;
   summary: string;
   tags: string[];
+  imageUrls: string[];
 }
 
 export interface SessionDetail extends SessionSummary {
