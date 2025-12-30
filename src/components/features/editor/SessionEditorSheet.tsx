@@ -125,8 +125,34 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
     }
   }, [sessionId, queryClient])
 
+  // Controlled state for Sheet
+  const [open, setOpen] = React.useState(false)
+
+  // Swipe to close logic
+  const touchStart = React.useRef<number | null>(null)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = e.targetTouches[0].clientX
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current) return
+    const currentX = e.targetTouches[0].clientX
+    const diff = currentX - touchStart.current
+
+    // If swiping right significantly
+    if (diff > 100) {
+      setOpen(false)
+      touchStart.current = null
+    }
+  }
+
+  const handleTouchEnd = () => {
+    touchStart.current = null
+  }
+
   return (
-    <Sheet>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         {trigger || (
           <Button size="sm" className="w-full gap-2 cursor-pointer" variant="outline">
@@ -135,7 +161,12 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
           </Button>
         )}
       </SheetTrigger>
-      <SheetContent className="w-[400px] sm:w-[540px] flex flex-col h-full bg-background/95 dark:bg-zinc-950/95 border-l-0 shadow-2xl backdrop-blur-sm [&>button]:hidden outline-none">
+      <SheetContent
+        className="w-[400px] sm:w-[540px] flex flex-col h-full bg-background/95 dark:bg-zinc-950/95 border-l-0 shadow-2xl backdrop-blur-sm [&>button]:hidden outline-none"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
           <SheetTitle>Session Log</SheetTitle>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
