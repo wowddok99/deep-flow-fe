@@ -14,7 +14,7 @@ export function Timer() {
 
   React.useEffect(() => {
     let interval: NodeJS.Timeout
-    
+
     if (isRunning && startTime) {
       const start = new Date(startTime).getTime()
       const update = () => {
@@ -44,7 +44,7 @@ export function Timer() {
       // Mocking for now since backend might not be ready or reachable
       // const session = await api.sessions.start()
       // startTimer(session.id, session.startTime)
-      
+
       // Real implementation:
       const session = await api.sessions.start()
       startTimer(session.id, session.startTime)
@@ -69,22 +69,22 @@ export function Timer() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-12">
+    <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-12 px-4 sm:px-6">
       <motion.div
         className="relative"
         initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ 
-          opacity: 1, 
+        animate={{
+          opacity: 1,
           scale: 1,
           filter: "none"
         }}
         transition={{ duration: 0.5 }}
       >
-         {/* Breathing Background Animation Removed for Minimal Look */}
+        {/* Breathing Background Animation Removed for Minimal Look */}
 
         <div className={cn(
-            "relative text-[15vw] md:text-[12rem] font-bold tracking-tighter tabular-nums leading-none select-none font-mono transition-colors duration-700",
-            isRunning ? "text-foreground" : "text-muted-foreground/30"
+          "relative text-[10vw] md:text-[12rem] font-bold tracking-tighter tabular-nums leading-none select-none font-mono transition-colors duration-700",
+          isRunning ? "text-foreground" : "text-muted-foreground/30"
         )}>
           {formatTime(elapsed)}
         </div>
@@ -94,36 +94,36 @@ export function Timer() {
         <AnimatePresence mode="wait">
           {!isRunning ? (
             <motion.div
-                key="start"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+              key="start"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
             >
-                <Button
-                    size="icon"
-                    className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform"
-                    onClick={handleStart}
-                >
-                    <Play className="h-8 w-8 ml-1" />
-                    <span className="sr-only">Start</span>
-                </Button>
+              <Button
+                size="icon"
+                className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform"
+                onClick={handleStart}
+              >
+                <Play className="h-8 w-8 ml-1" />
+                <span className="sr-only">Start</span>
+              </Button>
             </motion.div>
           ) : (
-             <motion.div
-                key="stop"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+            <motion.div
+              key="stop"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
             >
-                <Button
-                    size="icon"
-                    variant="outline"
-                    className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform border-2"
-                    onClick={handleStop}
-                >
-                    <Square className="h-8 w-8 fill-current" />
-                    <span className="sr-only">Stop</span>
-                </Button>
+              <Button
+                size="icon"
+                variant="outline"
+                className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform border-2"
+                onClick={handleStop}
+              >
+                <Square className="h-8 w-8 fill-current" />
+                <span className="sr-only">Stop</span>
+              </Button>
             </motion.div>
           )}
         </AnimatePresence>

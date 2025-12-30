@@ -48,8 +48,8 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
   // Sync title from session
   React.useEffect(() => {
     if (session?.title) {
-        setTitle(session.title)
-        titleRef.current = session.title
+      setTitle(session.title)
+      titleRef.current = session.title
     }
   }, [session?.title])
 
@@ -58,22 +58,22 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
     if (!sessionId) return
     setIsSaving(true)
     try {
-        const summary = extractTextFromContent(content);
-        await api.logs.update(sessionId, {
-            content,
-            title: titleRef.current, // Use ref
-            summary, 
-            tags: session?.tags || [],
-            imageUrls: session?.imageUrls || []
-        })
-        isDirtyRef.current = false
-        // Refresh list AND detail
-        await queryClient.invalidateQueries({ queryKey: ['sessions'] })
-        await queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
+      const summary = extractTextFromContent(content);
+      await api.logs.update(sessionId, {
+        content,
+        title: titleRef.current, // Use ref
+        summary,
+        tags: session?.tags || [],
+        imageUrls: session?.imageUrls || []
+      })
+      isDirtyRef.current = false
+      // Refresh list AND detail
+      await queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      await queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
     } catch (e) {
-        console.error("Save failed", e)
+      console.error("Save failed", e)
     } finally {
-        setIsSaving(false)
+      setIsSaving(false)
     }
   }
 
@@ -81,10 +81,10 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
     contentRef.current = content
     isDirtyRef.current = true
     setIsSaving(true)
-    
+
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
     timeoutRef.current = setTimeout(() => {
-        handleSave(content)
+      handleSave(content)
     }, 1000)
   }
 
@@ -92,14 +92,14 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
     setTitle(newTitle)
     titleRef.current = newTitle
     isDirtyRef.current = true
-    
+
     if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+      clearTimeout(timeoutRef.current)
     }
-    
+
     // Auto-save title change with content
     timeoutRef.current = setTimeout(() => {
-         handleSave(contentRef.current || initialContent)
+      handleSave(contentRef.current || initialContent)
     }, 1000)
   }
 
@@ -110,12 +110,12 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
       if (isDirtyRef.current && contentRef.current && sessionId) {
         // Optimistically update cache so immediate re-open shows data
         queryClient.setQueryData(['session', sessionId], (old: any) => {
-             if (!old) return old;
-             // Ensure we don't break the structure
-             return {
-                 ...old,
-                 content: JSON.stringify(contentRef.current)
-             }
+          if (!old) return old;
+          // Ensure we don't break the structure
+          return {
+            ...old,
+            content: JSON.stringify(contentRef.current)
+          }
         })
 
         // Fire save
@@ -124,38 +124,66 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
     }
   }, [sessionId, queryClient])
 
+  // Swipe to close logic
+  const touchStart = React.useRef<number | null>(null)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStart.current = e.targetTouches[0].clientX
+  }
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart.current) return
+    const currentX = e.targetTouches[0].clientX
+    const diff = currentX - touchStart.current
+
+    // If swiping right significantly
+    if (diff > 100) {
+      onClose()
+      touchStart.current = null
+    }
+  }
+
+  const handleTouchEnd = () => {
+    touchStart.current = null
+  }
+
   return (
     <Sheet open={!!sessionId} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className="w-[400px] sm:w-[600px] flex flex-col h-full bg-background/95 dark:bg-zinc-950/95 border-l-0 shadow-2xl backdrop-blur-sm sm:max-w-[600px] [&>button]:hidden outline-none">
+      <SheetContent
+        className="w-full sm:w-[600px] flex flex-col h-full bg-background/95 dark:bg-zinc-950/95 border-l-0 shadow-2xl backdrop-blur-sm sm:max-w-[600px] [&>button]:hidden outline-none"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
           <SheetTitle>
             {isLoading ? "Loading..." : moment(session?.startTime)}
           </SheetTitle>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {isSaving ? (
-                <>
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Saving...
-                </>
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Saving...
+              </>
             ) : (
-                <span>Saved</span>
+              <span>Saved</span>
             )}
           </div>
         </SheetHeader>
-        
+
         <div className="flex-1 overflow-y-auto py-4">
-            {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-            ) : (
-                <Editor 
-                    initialContent={initialContent} 
-                    title={title}
-                    onChangeTitle={onTitleChange}
-                    onSave={onEditorUpdate} 
-                />
-            )}
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Editor
+              initialContent={initialContent}
+              title={title}
+              onChangeTitle={onTitleChange}
+              onSave={onEditorUpdate}
+            />
+          )}
         </div>
       </SheetContent>
     </Sheet>
@@ -163,9 +191,9 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
 }
 
 function moment(dateStr?: string) {
-    if(!dateStr) return "Session Log"
-    return new Date(dateStr).toLocaleString(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short'
-    })
+  if (!dateStr) return "Session Log"
+  return new Date(dateStr).toLocaleString(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  })
 }

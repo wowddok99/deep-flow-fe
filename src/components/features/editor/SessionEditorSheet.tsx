@@ -14,7 +14,7 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
   const { sessionId, isRunning } = useTimerStore()
   const queryClient = useQueryClient()
   const [isSaving, setIsSaving] = React.useState(false)
-  
+
   // Fetch existing session data
   const { data: session, isLoading, refetch } = useQuery({
     queryKey: ['session', sessionId],
@@ -43,12 +43,12 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
   // Track title state
   const [title, setTitle] = React.useState("")
   const titleRef = React.useRef("") // Ref to access latest title in timeouts
-  
+
   // Sync title from session
   React.useEffect(() => {
     if (session?.title) {
-        setTitle(session.title)
-        titleRef.current = session.title
+      setTitle(session.title)
+      titleRef.current = session.title
     }
   }, [session?.title])
 
@@ -56,37 +56,37 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
     if (!sessionId) return
     setIsSaving(true)
     try {
-        const summary = extractTextFromContent(content);
-        await api.logs.update(sessionId, {
-            content,
-            title: titleRef.current, // Use ref for latest value
-            summary, 
-            tags: session?.tags || [],
-            imageUrls: session?.imageUrls || []
-        })
-        isDirtyRef.current = false
-        // Ensure next fetch gets fresh data
-        await queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
-        await queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      const summary = extractTextFromContent(content);
+      await api.logs.update(sessionId, {
+        content,
+        title: titleRef.current, // Use ref for latest value
+        summary,
+        tags: session?.tags || [],
+        imageUrls: session?.imageUrls || []
+      })
+      isDirtyRef.current = false
+      // Ensure next fetch gets fresh data
+      await queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
+      await queryClient.invalidateQueries({ queryKey: ['sessions'] })
     } catch (e) {
-        console.error("Save failed", e)
+      console.error("Save failed", e)
     } finally {
-        setIsSaving(false)
+      setIsSaving(false)
     }
   }
 
   const onEditorUpdate = (content: any) => {
     contentRef.current = content
     isDirtyRef.current = true
-    setIsSaving(true) 
-    
+    setIsSaving(true)
+
     if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+      clearTimeout(timeoutRef.current)
     }
-    
+
     // Auto-save after 1s
     timeoutRef.current = setTimeout(() => {
-        handleSave(content)
+      handleSave(content)
     }, 1000)
   }
 
@@ -94,14 +94,14 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
     setTitle(newTitle)
     titleRef.current = newTitle // Update ref immediately
     isDirtyRef.current = true
-    
+
     if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+      clearTimeout(timeoutRef.current)
     }
-    
+
     // Auto-save title change with content
     timeoutRef.current = setTimeout(() => {
-         handleSave(contentRef.current || initialContent)
+      handleSave(contentRef.current || initialContent)
     }, 1000)
   }
 
@@ -112,27 +112,27 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
       if (isDirtyRef.current && contentRef.current && sessionId) {
         // Optimistically update cache so immediate re-open shows data
         queryClient.setQueryData(['session', sessionId], (old: any) => {
-             if (!old) return old;
-             return {
-                 ...old,
-                 content: JSON.stringify(contentRef.current)
-             }
+          if (!old) return old;
+          return {
+            ...old,
+            content: JSON.stringify(contentRef.current)
+          }
         })
-        
+
         // Fire save
         handleSave(contentRef.current)
       }
     }
-  }, [sessionId, queryClient]) 
+  }, [sessionId, queryClient])
 
   return (
     <Sheet>
       <SheetTrigger asChild>
         {trigger || (
-            <Button size="sm" className="w-full gap-2" variant="outline">
-                <Edit3 className="h-3 w-3" />
-                Open Editor
-            </Button>
+          <Button size="sm" className="w-full gap-2 cursor-pointer" variant="outline">
+            <Edit3 className="h-3 w-3" />
+            Open Editor
+          </Button>
         )}
       </SheetTrigger>
       <SheetContent className="w-[400px] sm:w-[540px] flex flex-col h-full bg-background/95 dark:bg-zinc-950/95 border-l-0 shadow-2xl backdrop-blur-sm [&>button]:hidden outline-none">
@@ -140,28 +140,28 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
           <SheetTitle>Session Log</SheetTitle>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {isSaving ? (
-                <>
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    Saving...
-                </>
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Saving...
+              </>
             ) : (
-                <span>Saved</span>
+              <span>Saved</span>
             )}
           </div>
         </SheetHeader>
         <div className="flex-1 overflow-y-auto py-4">
-            {isLoading ? (
-                <div className="flex items-center justify-center h-full">
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                </div>
-            ) : (
-                <Editor 
-                    initialContent={initialContent} 
-                    title={title}
-                    onChangeTitle={onTitleChange}
-                    onSave={onEditorUpdate} 
-                />
-            )}
+          {isLoading ? (
+            <div className="flex items-center justify-center h-full">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <Editor
+              initialContent={initialContent}
+              title={title}
+              onChangeTitle={onTitleChange}
+              onSave={onEditorUpdate}
+            />
+          )}
         </div>
       </SheetContent>
     </Sheet>
