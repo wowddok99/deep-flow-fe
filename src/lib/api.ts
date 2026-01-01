@@ -31,6 +31,12 @@ export interface SessionDetail extends SessionSummary {
   imageUrls: string[];
 }
 
+export interface CursorResponse<T> {
+  content: T[];
+  nextCursorId: number | null;
+  hasNext: boolean;
+}
+
 export const api = {
   sessions: {
     start: async (): Promise<FocusSession> => {
@@ -46,8 +52,12 @@ export const api = {
       });
       if (!res.ok) throw new Error('Failed to stop session');
     },
-    list: async (): Promise<SessionSummary[]> => {
-      const res = await fetch(`${API_BASE_URL}/sessions`);
+    list: async (cursorId?: number, size = 20): Promise<CursorResponse<SessionSummary>> => {
+      const params = new URLSearchParams();
+      if (cursorId) params.append('cursorId', cursorId.toString());
+      params.append('size', size.toString());
+      
+      const res = await fetch(`${API_BASE_URL}/sessions?${params.toString()}`);
       if (!res.ok) throw new Error('Failed to fetch sessions');
       return res.json();
     },
