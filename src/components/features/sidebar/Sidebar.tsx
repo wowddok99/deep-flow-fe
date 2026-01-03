@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { ChevronRight, History, MoreVertical, Edit3, Trash2 } from "lucide-react"
+import { ChevronRight, History, MoreVertical, Edit3, Trash2, LogOut, RefreshCw } from "lucide-react"
+import { useAuthStore } from "@/store/useAuthStore"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { SessionEditorSheet } from "@/components/features/editor/SessionEditorSheet"
@@ -14,21 +15,13 @@ import { useInView } from "react-intersection-observer"
 import { api } from "@/lib/api"
 import { cn } from "@/lib/utils"
 import { ModeToggle } from "@/components/mode-toggle"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = React.useState(true)
   const [selectedSessionId, setSelectedSessionId] = React.useState<number | null>(null)
-  const [sessionToDelete, setSessionToDelete] = React.useState<number | null>(null)
+  
+  const { logout } = useAuthStore()
 
   const { isRunning, startTime } = useTimerStore()
 
@@ -64,7 +57,6 @@ export function Sidebar() {
   const handleDelete = async (id: number) => {
     try {
       await api.sessions.delete(id)
-      setSessionToDelete(null)
       refetch()
     } catch (e) {
       console.error("Failed to delete session", e)
@@ -83,6 +75,7 @@ export function Sidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setIsOpen(!isOpen)}
+          className="cursor-pointer"
         >
           {isOpen ? <ChevronRight /> : <History />}
         </Button>
@@ -94,8 +87,23 @@ export function Sidebar() {
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
           <h2 className="text-lg font-semibold tracking-tight">Focus Flow</h2>
-          <div className="hidden sm:block -mr-2">
+          <div className="hidden sm:flex -mr-2 items-center gap-1">
             <ModeToggle />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost" 
+                  size="icon"
+                  className="cursor-pointer"
+                  onClick={() => logout()}
+                >
+                  <LogOut className="h-[1.2rem] w-[1.2rem]" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Logout</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
         </div>
 
@@ -126,14 +134,22 @@ export function Sidebar() {
         <div className="py-4 px-2 sm:py-6 sm:px-3 flex-1 overflow-hidden">
           <div className="flex items-center justify-between mb-4 px-2 sm:px-3">
             <span className="text-sm font-medium text-muted-foreground">Recent History</span>
-            <Button variant="ghost" size="icon" className="h-4 w-4 hidden sm:inline-flex" onClick={() => refetch()}>
-              <History className="h-3 w-3" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-4 w-4 hidden sm:inline-flex cursor-pointer" onClick={() => refetch()}>
+                  <RefreshCw className="h-3 w-3" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Refresh list</p>
+              </TooltipContent>
+            </Tooltip>
           </div>
           <ScrollArea className="h-full pr-3">
             <div className="space-y-4">
               {isLoading && <div className="text-xs text-muted-foreground text-center py-4">Loading history...</div>}
 
+              {/* Session List */}
               {sessions?.pages.map((page, i) => (
                 <React.Fragment key={i}>
                   {page.content.map((session) => (
@@ -178,7 +194,11 @@ export function Sidebar() {
                             className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
                             onClick={(e) => {
                               e.stopPropagation()
-                              setSessionToDelete(session.id)
+                              if (session.status === 'ONGOING') {
+                                alert("진행 중인 세션은 삭제할 수 없습니다.")
+                                return
+                              }
+                              handleDelete(session.id)
                             }}
                           >
                             <Trash2 className="h-3 w-3 text-destructive" />
@@ -197,10 +217,8 @@ export function Sidebar() {
                   ))}
                 </React.Fragment>
               ))}
-              
-              <div ref={ref} className="h-4 w-full" />
-              {isFetchingNextPage && <div className="text-xs text-muted-foreground text-center py-2">Loading more...</div>}
 
+              {/* Check for empty history */}
               {!isLoading && sessions?.pages[0]?.content.length === 0 && (
                 <div className="text-xs text-muted-foreground text-center py-4">No history yet</div>
               )}
@@ -213,23 +231,6 @@ export function Sidebar() {
         sessionId={selectedSessionId}
         onClose={() => setSelectedSessionId(null)}
       />
-
-      <AlertDialog open={!!sessionToDelete} onOpenChange={(open: boolean) => !open && setSessionToDelete(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the session and its logs.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => sessionToDelete && handleDelete(sessionToDelete)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </motion.aside>
   )
 }

@@ -6,7 +6,7 @@ import { Editor } from "./Editor"
 import { useTimerStore } from "@/store/timer-store"
 import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
-import { Edit3, Loader2 } from "lucide-react"
+import { Edit3, Loader2, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { extractTextFromContent } from "@/lib/utils"
 
@@ -14,6 +14,7 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
   const { sessionId, isRunning } = useTimerStore()
   const queryClient = useQueryClient()
   const [isSaving, setIsSaving] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
 
   // Fetch existing session data
   const { data: session, isLoading, refetch } = useQuery({
@@ -23,16 +24,25 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
     // staleTime removed to ensure fresh data fetch on mount
   })
 
-  // Parse content safely
-  const initialContent = React.useMemo(() => {
-    if (!session?.content) return null
-    try {
-      return JSON.parse(session.content)
-    } catch (e) {
-      console.error("Failed to parse content JSON", e)
-      return null
+  // Stable content state to prevent cursor jumps on save-refetch
+  const [initialContent, setInitialContent] = React.useState<any>(null)
+  const lastSessionIdRef = React.useRef<number | null>(null)
+
+  // Sync content only on open or session change
+  React.useEffect(() => {
+    if (open && session?.content && sessionId && sessionId !== lastSessionIdRef.current) {
+      setInitialContent(session.content)
+      lastSessionIdRef.current = sessionId
     }
-  }, [session?.content])
+  }, [open, session?.content, sessionId])
+
+  // Reset stable content on close to ensure fresh fetch next time
+  React.useEffect(() => {
+    if (!open) {
+      lastSessionIdRef.current = null
+      setInitialContent(null)
+    }
+  }, [open])
 
   // Ref to track latest content for unmount saving
   const contentRef = React.useRef<any>(null)
@@ -115,7 +125,7 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
           if (!old) return old;
           return {
             ...old,
-            content: JSON.stringify(contentRef.current)
+            content: contentRef.current // No stringify needed as we handle object now
           }
         })
 
@@ -125,8 +135,6 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
     }
   }, [sessionId, queryClient])
 
-  // Controlled state for Sheet
-  const [open, setOpen] = React.useState(false)
 
   // Swipe to close logic
   const touchStart = React.useRef<number | null>(null)
@@ -167,7 +175,19 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 z-50">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0 transition-transform hover:scale-125"
+            onClick={() => setOpen(false)}
+          >
+            <ChevronRight className="h-6 w-6" />
+            <span className="sr-only">Close</span>
+          </Button>
+        </div>
+
+        <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-zinc-800 pl-4">
           <SheetTitle>Session Log</SheetTitle>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {isSaving ? (

@@ -62,9 +62,13 @@ export function Timer() {
     try {
       await api.sessions.stop(sessionId)
       stopTimer()
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to stop session", error)
-      // stopTimer() // Force stop on error?
+      // If session is not found (404), it means it's already stopped or deleted on server.
+      // We should stop the local timer to sync state.
+      if (error.response?.status === 404) {
+          stopTimer()
+      }
     }
   }
 
@@ -101,7 +105,7 @@ export function Timer() {
             >
               <Button
                 size="icon"
-                className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform"
+                className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform cursor-pointer"
                 onClick={handleStart}
               >
                 <Play className="h-8 w-8 ml-1" />
@@ -118,7 +122,7 @@ export function Timer() {
               <Button
                 size="icon"
                 variant="outline"
-                className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform border-2"
+                className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform border-2 cursor-pointer"
                 onClick={handleStop}
               >
                 <Square className="h-8 w-8 fill-current" />

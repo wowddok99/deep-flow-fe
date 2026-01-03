@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Editor } from "./Editor"
 import { api } from "@/lib/api"
-import { Loader2 } from "lucide-react"
+import { Loader2, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import { extractTextFromContent } from "@/lib/utils"
 
 interface SessionDetailSheetProps {
@@ -25,15 +26,9 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
     refetchOnMount: true
   })
 
-  // Parse content safely
+  // Content is already an object from backend
   const initialContent = React.useMemo(() => {
-    if (!session?.content) return null
-    try {
-      return JSON.parse(session.content)
-    } catch (e) {
-      console.error("Failed to parse content JSON", e)
-      return null
-    }
+    return session?.content || null
   }, [session?.content])
 
   // Ref to track latest content for unmount saving
@@ -114,7 +109,7 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
           // Ensure we don't break the structure
           return {
             ...old,
-            content: JSON.stringify(contentRef.current)
+            content: contentRef.current
           }
         })
 
@@ -155,10 +150,22 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b">
-          <SheetTitle>
-            {isLoading ? "Loading..." : moment(session?.startTime)}
-          </SheetTitle>
+        <div className="absolute left-2 top-1/2 -translate-y-1/2 z-50">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0 transition-transform hover:scale-125"
+            onClick={() => onClose()}
+          >
+            <ChevronRight className="h-6 w-6" />
+            <span className="sr-only">Close</span>
+          </Button>
+        </div>
+
+        <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-zinc-800 pl-4">
+           <SheetTitle>
+              {isLoading ? "Loading..." : moment(session?.startTime)}
+           </SheetTitle>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {isSaving ? (
               <>

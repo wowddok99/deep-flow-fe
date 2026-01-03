@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api/v1';
+import axiosInstance from '@/lib/axios';
 
 export interface FocusSession {
   id: number;
@@ -27,7 +27,7 @@ export interface LogUpdateRequest {
 }
 
 export interface SessionDetail extends SessionSummary {
-  content: string | null;
+  content: object | null;
   imageUrls: string[];
 }
 
@@ -37,48 +37,36 @@ export interface CursorResponse<T> {
   hasNext: boolean;
 }
 
-export const api = {
+export const sessionsApi = {
   sessions: {
     start: async (): Promise<FocusSession> => {
-      const res = await fetch(`${API_BASE_URL}/sessions/start`, {
-        method: 'POST',
-      });
-      if (!res.ok) throw new Error('Failed to start session');
-      return res.json();
+      const res = await axiosInstance.post<FocusSession>('/sessions/start');
+      return res.data;
     },
     stop: async (id: number): Promise<void> => {
-      const res = await fetch(`${API_BASE_URL}/sessions/${id}/stop`, {
-        method: 'POST',
-      });
-      if (!res.ok) throw new Error('Failed to stop session');
+      await axiosInstance.post(`/sessions/${id}/stop`);
     },
     list: async (cursorId?: number, size = 20): Promise<CursorResponse<SessionSummary>> => {
-      const params = new URLSearchParams();
-      if (cursorId) params.append('cursorId', cursorId.toString());
-      params.append('size', size.toString());
-      
-      const res = await fetch(`${API_BASE_URL}/sessions?${params.toString()}`);
-      if (!res.ok) throw new Error('Failed to fetch sessions');
-      return res.json();
+      const res = await axiosInstance.get<CursorResponse<SessionSummary>>('/sessions', {
+        params: { cursorId, size }
+      });
+      return res.data;
     },
     get: async (id: number): Promise<SessionDetail> => {
-      const res = await fetch(`${API_BASE_URL}/sessions/${id}`);
-      if (!res.ok) throw new Error('Failed to fetch session detail');
-      return res.json();
+      const res = await axiosInstance.get<SessionDetail>(`/sessions/${id}`);
+      return res.data;
     },
     delete: async (id: number): Promise<void> => {
-        const res = await fetch(`${API_BASE_URL}/sessions/${id}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error('Failed to delete session');
-    }
+      await axiosInstance.delete(`/sessions/${id}`);
+    },
   },
   logs: {
     update: async (sessionId: number, data: LogUpdateRequest): Promise<void> => {
-      const res = await fetch(`${API_BASE_URL}/sessions/${sessionId}/log`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) throw new Error('Failed to update log');
+      await axiosInstance.put(`/sessions/${sessionId}/log`, data);
     }
   }
 };
+
+// Export as 'api' to maintain backward compatibility with existing imports, 
+// ensuring we don't conflict with the 'api' import from axios.
+export { sessionsApi as api };

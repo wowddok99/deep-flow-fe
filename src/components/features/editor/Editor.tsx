@@ -109,6 +109,12 @@ export function Editor({ initialContent, title, onChangeTitle, onSave }: EditorP
             type="text"
             value={title}
             onChange={(e) => onChangeTitle(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                editor?.commands.focus()
+              }
+            }}
             placeholder="Untitled"
             className="text-4xl font-bold bg-transparent border-none outline-none px-4 py-4 w-full placeholder:text-muted-foreground/50"
         />
