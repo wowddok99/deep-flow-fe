@@ -20,7 +20,7 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
   const { data: session, isLoading, refetch } = useQuery({
     queryKey: ['session', sessionId],
     queryFn: () => api.sessions.get(sessionId!),
-    enabled: !!sessionId,
+    enabled: !!sessionId && String(sessionId).length < 13, // Disable for temp IDs (timestamps)
     // staleTime removed to ensure fresh data fetch on mount
   })
 
@@ -53,6 +53,14 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
   // Track title state
   const [title, setTitle] = React.useState("")
   const titleRef = React.useRef("") // Ref to access latest title in timeouts
+
+  // Reset title when sessionId changes to avoid stale data
+  React.useEffect(() => {
+    if (open) { // Only if open, though sessionId change implies context switch
+        setTitle("")
+        titleRef.current = ""
+    }
+  }, [sessionId, open])
 
   // Sync title from session
   React.useEffect(() => {

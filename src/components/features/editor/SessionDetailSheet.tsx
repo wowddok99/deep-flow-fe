@@ -21,7 +21,7 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
   const { data: session, isLoading } = useQuery({
     queryKey: ['session', sessionId],
     queryFn: () => api.sessions.get(sessionId!),
-    enabled: !!sessionId,
+    enabled: !!sessionId && String(sessionId).length < 13, // Disable for temp IDs (timestamps)
     staleTime: 0, // Ensure fresh data on every open
     refetchOnMount: true
   })
@@ -39,6 +39,12 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
   // Track title state
   const [title, setTitle] = React.useState("")
   const titleRef = React.useRef("")
+
+  // Reset title when sessionId changes to avoid stale data
+  React.useEffect(() => {
+    setTitle("")
+    titleRef.current = ""
+  }, [sessionId])
 
   // Sync title from session
   React.useEffect(() => {

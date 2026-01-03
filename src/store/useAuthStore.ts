@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import api from '@/lib/axios';
 import { persist } from 'zustand/middleware';
+import { useTimerStore } from './timer-store';
 
 interface User {
     // Add user fields if we decode the token or fetch user profile
@@ -64,7 +65,8 @@ export const useAuthStore = create<AuthState>((set, get) => {
             console.error("Logout failed", e);
         } finally {
             set({ accessToken: null, isAuthenticated: false, user: null });
-             window.location.href = '/'; 
+            useTimerStore.getState().stopTimer(); // Clear persisted timer state
+            window.location.href = '/'; 
         }
       },
     
