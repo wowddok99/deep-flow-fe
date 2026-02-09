@@ -125,6 +125,40 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
     }
   }, [sessionId, queryClient])
 
+  // Save immediately before closing
+  const saveAndClose = React.useCallback(async () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
+    }
+
+    if (isDirtyRef.current && sessionId) {
+      const contentToSave = contentRef.current || initialContent
+      if (contentToSave) {
+        // Save synchronously before closing
+        setIsSaving(true)
+        try {
+          const summary = extractTextFromContent(contentToSave);
+          await api.logs.update(sessionId, {
+            content: contentToSave,
+            title: titleRef.current,
+            summary,
+            tags: session?.tags || [],
+            imageUrls: session?.imageUrls || []
+          })
+          isDirtyRef.current = false
+          await queryClient.invalidateQueries({ queryKey: ['sessions'] })
+        } catch (e) {
+          console.error("Save on close failed", e)
+        } finally {
+          setIsSaving(false)
+        }
+      }
+    }
+
+    onClose()
+  }, [sessionId, initialContent, session?.tags, session?.imageUrls, queryClient, onClose])
+
   // Swipe to close logic
   const touchStart = React.useRef<number | null>(null)
 
@@ -139,7 +173,7 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
 
     // If swiping right significantly
     if (diff > 100) {
-      onClose()
+      saveAndClose()
       touchStart.current = null
     }
   }
@@ -148,8 +182,15 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
     touchStart.current = null
   }
 
+  // Handle sheet open/close
+  const handleOpenChange = React.useCallback((open: boolean) => {
+    if (!open) {
+      saveAndClose()
+    }
+  }, [saveAndClose])
+
   return (
-    <Sheet open={!!sessionId} onOpenChange={(open) => !open && onClose()}>
+    <Sheet open={!!sessionId} onOpenChange={handleOpenChange}>
       <SheetContent
         className="w-full sm:w-[600px] flex flex-col h-full bg-background/95 dark:bg-zinc-950/95 border-l-0 shadow-2xl backdrop-blur-sm sm:max-w-[600px] [&>button]:hidden outline-none"
         onTouchStart={handleTouchStart}
@@ -161,7 +202,7 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
             variant="ghost"
             size="icon"
             className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-transparent cursor-pointer focus-visible:ring-0 focus-visible:ring-offset-0 transition-transform hover:scale-125"
-            onClick={() => onClose()}
+            onClick={() => saveAndClose()}
           >
             <ChevronRight className="h-6 w-6" />
             <span className="sr-only">Close</span>
@@ -169,9 +210,9 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
         </div>
 
         <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-zinc-800 pl-4">
-           <SheetTitle>
-              {isLoading ? "Loading..." : moment(session?.startTime)}
-           </SheetTitle>
+          <SheetTitle>
+            {isLoading ? "Loading..." : moment(session?.startTime)}
+          </SheetTitle>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {isSaving ? (
               <>
