@@ -10,22 +10,22 @@ export default function LandingPage() {
     <div className="flex min-h-screen flex-col bg-black text-white">
       
       {/* Navigation */}
-      <nav className="relative z-50 flex items-center justify-between px-8 py-6 max-w-6xl mx-auto w-full">
-         <div className="font-bold text-xl tracking-tighter select-none cursor-default text-white">
+      <nav className="relative z-50 flex items-center justify-between px-4 sm:px-8 py-4 sm:py-6 max-w-6xl mx-auto w-full">
+         <div className="font-bold text-lg sm:text-xl tracking-tighter select-none cursor-default text-white">
             Deep Flow
          </div>
-         <div className="flex items-center gap-5">
-             <Link href="/login" className="text-[15px] font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer">
+         <div className="flex items-center gap-3 sm:gap-5">
+             <Link href="/login" className="text-[13px] sm:text-[15px] font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer">
                 로그인
              </Link>
-             <Link href="/signup" className="text-[15px] font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer">
+             <Link href="/signup" className="text-[13px] sm:text-[15px] font-medium text-zinc-400 hover:text-white transition-colors cursor-pointer">
                 회원가입
              </Link>
          </div>
       </nav>
 
       {/* Hero Section */}
-      <main className="flex-1 flex flex-col items-center justify-center text-center px-4 -mt-20 relative z-0">
+      <main className="flex-1 flex flex-col items-center justify-center text-center px-4 relative z-0">
         <motion.div
            initial={{ opacity: 0, y: 30 }}
            animate={{ opacity: 1, y: 0 }}
