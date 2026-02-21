@@ -2,17 +2,17 @@ import axios from 'axios';
 
 // Callbacks to access store without importing it (circular dependency)
 let getAccessTokenFn: () => string | null = () => null;
-let logoutFn: () => void = () => {};
-let setTokenFn: (token: string) => void = () => {};
+let logoutFn: () => void = () => { };
+let setTokenFn: (token: string) => void = () => { };
 
 export const setupAxios = (
-    getToken: () => string | null, 
-    logout: () => void,
-    setToken: (token: string) => void
+  getToken: () => string | null,
+  logout: () => void,
+  setToken: (token: string) => void
 ) => {
-    getAccessTokenFn = getToken;
-    logoutFn = logout;
-    setTokenFn = setToken;
+  getAccessTokenFn = getToken;
+  logoutFn = logout;
+  setTokenFn = setToken;
 }
 
 // Create a custom Axios instance
@@ -42,8 +42,11 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Prevent infinite loops
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Auth 엔드포인트는 401 처리에서 제외 (로그인 실패 등)
+    const isAuthEndpoint = originalRequest.url?.includes('/auth/');
+
+    // Prevent infinite loops & skip auth endpoints
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthEndpoint) {
       originalRequest._retry = true;
 
       try {
@@ -53,10 +56,10 @@ api.interceptors.response.use(
         // We use full URL or relative to baseURL? api instance has baseURL.
         // Safest is to use the same 'api' instance but with a flag? 
         // Or just raw axios with correct baseURL.
-        const response = await axios.post('/api/v1/auth/reissue', {}, { 
-            withCredentials: true 
+        const response = await axios.post('/api/v1/auth/reissue', {}, {
+          withCredentials: true
         });
-        
+
         const newAccessToken = response.data.accessToken;
 
         // Update Store via callback

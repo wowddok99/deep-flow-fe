@@ -12,6 +12,22 @@ export function Timer() {
   const { isRunning, startTime, sessionId, startTimer, stopTimer } = useTimerStore()
   const [elapsed, setElapsed] = React.useState(0)
 
+  // Sync active session on mount
+  React.useEffect(() => {
+    if (!isRunning) {
+        api.sessions.list().then(({ content }) => {
+            const activeSession = content.find(s => s.status === 'ONGOING');
+            if (activeSession) {
+                startTimer(activeSession.id, activeSession.startTime);
+            }
+        }).catch(err => {
+            // Ignore 401/403 errors (not logged in)
+            console.debug("Failed to sync session", err);
+        });
+    }
+  }, []);
+
+
   React.useEffect(() => {
     let interval: NodeJS.Timeout
 
@@ -39,35 +55,61 @@ export function Timer() {
   }
 
   const handleStart = async () => {
-    try {
-      // Optimistic update could be added here, but for now wait for server
-      // Mocking for now since backend might not be ready or reachable
-      // const session = await api.sessions.start()
-      // startTimer(session.id, session.startTime)
+    // 1. Optimistic Update
+    const tempId = Date.now()
+    const tempStartTime = new Date().toISOString()
+    startTimer(tempId, tempStartTime)
 
-      // Real implementation:
+    try {
+      // 2. API Call
       const session = await api.sessions.start()
+      
+      // 3. Update with Real ID (Silent update)
+      // Assuming store accepts over-write or we just keep using it if logic permits. 
+      // Correct approach: restart timer with real ID to ensure consistency for stop.
+      // Since startTime should match server, we effectively "sync" here.
       startTimer(session.id, session.startTime)
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to start session", error)
-      // Fallback for demo if backend is down:
-      // const activeId = Date.now()
-      // const activeStart = new Date().toISOString()
-      // startTimer(activeId, activeStart)
+      
+      // 409 Conflict: Session already exists on server
+      if (error.response?.status === 409) {
+          try {
+              // Fetch proper active session
+              const { content } = await api.sessions.list()
+              const ongoingSession = content.find(s => s.status === 'ONGOING')
+              
+              if (ongoingSession) {
+                  startTimer(ongoingSession.id, ongoingSession.startTime)
+                  return // Recovered successfully
+              }
+          } catch (syncError) {
+              console.error("Failed to sync session after conflict", syncError)
+          }
+      }
+
+      // 4. Rollback on failure (if not recovered)
+      stopTimer()
+      // Optional: Show toast error here
     }
   }
 
   const handleStop = async () => {
     if (!sessionId) return
+    const currentId = sessionId
+    const currentStartTime = startTime
+
+    // 1. Optimistic Update
+    stopTimer()
+
     try {
-      await api.sessions.stop(sessionId)
-      stopTimer()
+      // 2. API Call
+      await api.sessions.stop(currentId)
     } catch (error: any) {
       console.error("Failed to stop session", error)
-      // If session is not found (404), it means it's already stopped or deleted on server.
-      // We should stop the local timer to sync state.
-      if (error.response?.status === 404) {
-          stopTimer()
+      // 3. Rollback on failure (Resume timer)
+      if (error.response?.status !== 404 && currentStartTime) {
+          startTimer(currentId, currentStartTime)
       }
     }
   }
