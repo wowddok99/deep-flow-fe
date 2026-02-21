@@ -60,7 +60,7 @@ api.interceptors.response.use(
           withCredentials: true
         });
 
-        const newAccessToken = response.data.accessToken;
+        const newAccessToken = response.data.data.accessToken;
 
         // Update Store via callback
         setTokenFn(newAccessToken);
@@ -79,5 +79,27 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+/** Extract error message from ApiResponse error or fallback to generic message */
+export function getApiErrorMessage(error: unknown, fallback = '오류가 발생했습니다.'): string {
+  if (axios.isAxiosError(error) && error.response?.data) {
+    const body = error.response.data;
+    if (body.error?.message) {
+      return body.error.message;
+    }
+  }
+  return fallback;
+}
+
+/** Extract error code from ApiResponse error */
+export function getApiErrorCode(error: unknown): string | null {
+  if (axios.isAxiosError(error) && error.response?.data) {
+    const body = error.response.data;
+    if (body.error?.code) {
+      return body.error.code;
+    }
+  }
+  return null;
+}
 
 export default api;

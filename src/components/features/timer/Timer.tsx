@@ -6,6 +6,7 @@ import { Play, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTimerStore } from "@/store/timer-store"
 import { api } from "@/lib/api"
+import { getApiErrorCode } from "@/lib/axios"
 import { cn } from "@/lib/utils"
 
 export function Timer() {
@@ -69,11 +70,11 @@ export function Timer() {
       // Correct approach: restart timer with real ID to ensure consistency for stop.
       // Since startTime should match server, we effectively "sync" here.
       startTimer(session.id, session.startTime)
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to start session", error)
-      
+
       // 409 Conflict: Session already exists on server
-      if (error.response?.status === 409) {
+      if (getApiErrorCode(error) === 'SESSION_ALREADY_EXISTS') {
           try {
               // Fetch proper active session
               const { content } = await api.sessions.list()

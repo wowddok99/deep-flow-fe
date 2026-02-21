@@ -50,7 +50,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
     
       login: async (credentials: LoginRequest) => { // Type annotation added
         const response = await api.post('/auth/login', credentials);
-        const { accessToken } = response.data;
+        const { accessToken } = response.data.data;
         set({ accessToken, isAuthenticated: true });
       },
     
@@ -73,7 +73,7 @@ export const useAuthStore = create<AuthState>((set, get) => {
       checkAuth: async () => {
           try {
               const response = await api.post('/auth/reissue');
-              const { accessToken } = response.data;
+              const { accessToken } = response.data.data;
               set({ accessToken, isAuthenticated: true });
           } catch (e) {
               set({ accessToken: null, isAuthenticated: false });

@@ -13,6 +13,7 @@ import { useTimerStore } from "@/store/timer-store"
 import { useInfiniteQuery } from "@tanstack/react-query"
 import { useInView } from "react-intersection-observer"
 import { api } from "@/lib/api"
+import { getApiErrorCode } from "@/lib/axios"
 import { cn } from "@/lib/utils"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -59,7 +60,12 @@ export function Sidebar() {
       await api.sessions.delete(id)
       refetch()
     } catch (e) {
-      console.error("Failed to delete session", e)
+      const code = getApiErrorCode(e)
+      if (code === 'SESSION_NOT_DELETABLE') {
+        alert("진행 중인 세션은 삭제할 수 없습니다.")
+      } else {
+        console.error("Failed to delete session", e)
+      }
     }
   }
 
