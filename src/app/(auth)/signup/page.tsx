@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { getApiErrorCode, getApiErrorMessage } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -46,12 +47,15 @@ export default function SignupPage() {
       // Optional: Auto-login or redirect to login. Implementation plan said redirect to login or auto-login.
       // Let's redirect to login for simplicity and clarity.
       router.push("/login?signup=success");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      if (err.response?.status === 409) {
-          setError("이미 존재하는 아이디입니다.");
+      const code = getApiErrorCode(err);
+      if (code === 'DUPLICATE_USERNAME') {
+        setError("이미 존재하는 아이디입니다.");
+      } else if (code === 'VALIDATION_ERROR') {
+        setError(getApiErrorMessage(err, "입력값을 확인해주세요."));
       } else {
-          setError("회원가입에 실패했습니다.");
+        setError("회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.");
       }
     } finally {
       setLoading(false);

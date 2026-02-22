@@ -231,12 +231,20 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <Editor
-              initialContent={initialContent}
-              title={title}
-              onChangeTitle={onTitleChange}
-              onSave={onEditorUpdate}
-            />
+            <>
+              {session?.aiSummary && (
+                <div className="mx-4 mb-4 p-3 rounded-lg bg-muted/50 border border-border/50">
+                  <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">AI Summary</span>
+                  <p className="text-sm text-foreground/80 mt-1 leading-relaxed">{session.aiSummary}</p>
+                </div>
+              )}
+              <Editor
+                initialContent={initialContent}
+                title={title}
+                onChangeTitle={onTitleChange}
+                onSave={onEditorUpdate}
+              />
+            </>
           )}
         </div>
       </SheetContent>

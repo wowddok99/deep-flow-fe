@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/useAuthStore";
+import { getApiErrorCode } from "@/lib/axios";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -30,9 +31,16 @@ export default function LoginPage() {
     try {
       await login(formData);
       router.push("/app");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setError("로그인에 실패했습니다. 아이디와 비밀번호를 확인해주세요.");
+      const code = getApiErrorCode(err);
+      if (code === 'INVALID_CREDENTIALS') {
+        setError("아이디 또는 비밀번호가 올바르지 않습니다.");
+      } else if (code === 'VALIDATION_ERROR') {
+        setError("입력값을 확인해주세요.");
+      } else {
+        setError("로그인에 실패했습니다. 잠시 후 다시 시도해주세요.");
+      }
     } finally {
       setLoading(false);
     }
