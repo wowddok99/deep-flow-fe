@@ -6,8 +6,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
 import { ResizableImage } from './ResizableImage'
-import { useEffect, useMemo, useRef, useCallback } from 'react'
-import { ImagePlus, Loader2 } from 'lucide-react'
+import { useEffect, useMemo, useCallback } from 'react'
 import { imagesApi } from '@/lib/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useState } from 'react'
@@ -20,7 +19,6 @@ interface EditorProps {
 }
 
 export function Editor({ initialContent, title, onChangeTitle, onSave }: EditorProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const [isUploading, setIsUploading] = useState(false)
 
   const extensions = useMemo(() => [
@@ -171,56 +169,22 @@ export function Editor({ initialContent, title, onChangeTitle, onSave }: EditorP
     }
   }
 
-  const handleImageButtonClick = () => {
-    fileInputRef.current?.click()
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || !editor) return
-    uploadAndInsertImages(Array.from(files), editor)
-    // Reset input so same file can be selected again
-    e.target.value = ''
-  }
 
   return (
     <div className="flex flex-col flex-1 w-full max-w-none">
-      <div className="flex items-center gap-2 px-4">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => onChangeTitle(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault()
-              editor?.commands.focus()
-            }
-          }}
-          placeholder="Untitled"
-          className="text-4xl font-bold bg-transparent border-none outline-none py-4 w-full placeholder:text-muted-foreground/50"
-        />
-        <button
-          type="button"
-          onClick={handleImageButtonClick}
-          disabled={isUploading}
-          className="flex-shrink-0 p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer disabled:opacity-50"
-          title="이미지 추가"
-        >
-          {isUploading ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <ImagePlus className="h-5 w-5" />
-          )}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/gif,image/webp"
-          multiple
-          onChange={handleFileChange}
-          className="hidden"
-        />
-      </div>
+      <input
+        type="text"
+        value={title}
+        onChange={(e) => onChangeTitle(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            editor?.commands.focus()
+          }
+        }}
+        placeholder="Untitled"
+        className="text-4xl font-bold bg-transparent border-none outline-none px-4 pt-2 pb-2 w-full placeholder:text-muted-foreground/50"
+      />
       {/* Use onKeyDownCapture to handle event in capture phase */}
       <div onKeyDownCapture={handleKeyDownCapture} className="flex-1 w-full">
         <EditorContent editor={editor} className="h-full" />

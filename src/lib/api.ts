@@ -94,6 +94,45 @@ export const imagesApi = {
   }
 };
 
+// Achievement types
+export type AchievementCategory =
+  | 'FIRST_STEP' | 'DEEP_DIVE' | 'GROWTH_RING' | 'SESSION_COUNT'
+  | 'STREAK' | 'DAILY_INTENSITY' | 'WRITER' | 'VISUAL'
+  | 'TIME_ZONE' | 'PATTERN' | 'VETERAN' | 'HIDDEN'
+
+export interface AchievementResponse {
+  code: string
+  name: string
+  description: string
+  category: AchievementCategory
+  grade: number
+  hidden: boolean
+  achieved: boolean
+}
+
+export interface UserAchievementResponse {
+  code: string
+  name: string
+  description: string
+  category: AchievementCategory
+  grade: number
+  achievedAt: string
+}
+
+export const achievementsApi = {
+  getAll: async (): Promise<AchievementResponse[]> => {
+    const res = await axiosInstance.get<ApiResponse<AchievementResponse[]>>('/achievements')
+    return res.data.data
+  },
+  getMine: async (): Promise<UserAchievementResponse[]> => {
+    const res = await axiosInstance.get<ApiResponse<UserAchievementResponse[]>>('/achievements/me')
+    return res.data.data
+  },
+  updateDisplay: async (achievementCode: string): Promise<void> => {
+    await axiosInstance.put('/achievements/display', { achievementCode })
+  },
+}
+
 // Export as 'api' to maintain backward compatibility with existing imports,
 // ensuring we don't conflict with the 'api' import from axios.
 export { sessionsApi as api };

@@ -209,23 +209,26 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
           </Button>
         </div>
 
-        <SheetHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-zinc-800 pl-4">
-          <SheetTitle>
-            {isLoading ? "Loading..." : moment(session?.startTime)}
-          </SheetTitle>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            {isSaving ? (
-              <>
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Saving...
-              </>
-            ) : (
-              <span>Saved</span>
-            )}
+        <SheetHeader className="flex flex-col space-y-0 pl-4">
+          <div className="flex flex-row items-center justify-between pb-4">
+            <SheetTitle>
+              {isLoading ? "Loading..." : moment(session?.startTime)}
+            </SheetTitle>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <span>Saved</span>
+              )}
+            </div>
           </div>
+          <div className="-mx-px h-px bg-zinc-800" />
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto py-4">
+        <div className="flex-1 overflow-y-auto pb-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-full">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

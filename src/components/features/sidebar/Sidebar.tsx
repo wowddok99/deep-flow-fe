@@ -17,6 +17,7 @@ import { getApiErrorCode } from "@/lib/axios"
 import { cn } from "@/lib/utils"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { DisplayAchievement } from "@/components/features/achievement/DisplayAchievement"
 
 export function Sidebar() {
   const [isOpen, setIsOpen] = React.useState(true)
@@ -92,7 +93,10 @@ export function Sidebar() {
 
       <div className="flex-1 overflow-hidden flex flex-col">
         <div className="p-4 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-          <h2 className="text-lg font-semibold tracking-tight">Focus Flow</h2>
+          <div className="flex flex-col gap-1">
+            <h2 className="text-lg font-semibold tracking-tight">Focus Flow</h2>
+            <DisplayAchievement />
+          </div>
           <div className="hidden sm:flex -mr-2 items-center gap-1">
             <ModeToggle />
             <Tooltip>
