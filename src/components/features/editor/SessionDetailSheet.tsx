@@ -7,7 +7,7 @@ import { Editor } from "./Editor"
 import { api } from "@/lib/api"
 import { Loader2, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { extractTextFromContent } from "@/lib/utils"
+import { extractTextFromContent, extractImageUrls } from "@/lib/utils"
 
 interface SessionDetailSheetProps {
   sessionId: number | null
@@ -65,7 +65,7 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
         title: titleRef.current, // Use ref
         summary,
         tags: session?.tags || [],
-        imageUrls: session?.imageUrls || []
+        imageUrls: extractImageUrls(content)
       })
       isDirtyRef.current = false
       // Refresh list AND detail
@@ -144,7 +144,7 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
             title: titleRef.current,
             summary,
             tags: session?.tags || [],
-            imageUrls: session?.imageUrls || []
+            imageUrls: extractImageUrls(contentToSave)
           })
           isDirtyRef.current = false
           await queryClient.invalidateQueries({ queryKey: ['sessions'] })
@@ -157,7 +157,7 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
     }
 
     onClose()
-  }, [sessionId, initialContent, session?.tags, session?.imageUrls, queryClient, onClose])
+  }, [sessionId, initialContent, session?.tags, queryClient, onClose])
 
   // Swipe to close logic
   const touchStart = React.useRef<number | null>(null)

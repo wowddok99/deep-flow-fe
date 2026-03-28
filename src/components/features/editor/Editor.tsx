@@ -5,7 +5,12 @@ import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
-import { useEffect, useMemo } from 'react'
+import { ResizableImage } from './ResizableImage'
+import { useEffect, useMemo, useRef, useCallback } from 'react'
+import { ImagePlus, Loader2 } from 'lucide-react'
+import { imagesApi } from '@/lib/api'
+import { useAuthStore } from '@/store/useAuthStore'
+import { useState } from 'react'
 
 interface EditorProps {
   initialContent?: any
@@ -15,6 +20,8 @@ interface EditorProps {
 }
 
 export function Editor({ initialContent, title, onChangeTitle, onSave }: EditorProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isUploading, setIsUploading] = useState(false)
 
   const extensions = useMemo(() => [
     StarterKit.configure({
@@ -34,7 +41,32 @@ export function Editor({ initialContent, title, onChangeTitle, onSave }: EditorP
     TaskItem.configure({
       nested: true,
     }),
+    ResizableImage.configure({
+      allowBase64: false,
+      HTMLAttributes: {
+        class: 'editor-image',
+      },
+    }),
   ], [])
+
+  const uploadAndInsertImages = useCallback(async (files: File[], editorInstance: any) => {
+    if (!editorInstance || files.length === 0) return
+
+    const imageFiles = files.filter(f => f.type.startsWith('image/'))
+    if (imageFiles.length === 0) return
+
+    setIsUploading(true)
+    try {
+      const urls = await imagesApi.upload(imageFiles, () => useAuthStore.getState().accessToken)
+      urls.forEach(url => {
+        editorInstance.chain().focus().setImage({ src: url }).run()
+      })
+    } catch (e) {
+      console.error("이미지 업로드 실패", e)
+    } finally {
+      setIsUploading(false)
+    }
+  }, [])
 
   const editor = useEditor({
     extensions,
@@ -43,7 +75,40 @@ export function Editor({ initialContent, title, onChangeTitle, onSave }: EditorP
       attributes: {
         class: 'tiptap prose prose-zinc dark:prose-invert focus:outline-none max-w-none min-h-[50vh] px-4 py-2 [&>*:first-child]:mt-0',
       },
-      // Ensure markdown shortcuts are enabled (StarterKit default)
+      handleDrop: (view, event, _slice, moved) => {
+        if (moved || !event.dataTransfer?.files?.length) return false
+        const files = Array.from(event.dataTransfer.files)
+        const imageFiles = files.filter(f => f.type.startsWith('image/'))
+        if (imageFiles.length === 0) return false
+
+        event.preventDefault()
+        // Use setTimeout to access editor after it's set
+        setTimeout(() => {
+          const editorInstance = (view as any).dom?.closest('.tiptap')?.editor || editor
+          uploadAndInsertImages(imageFiles, editor)
+        }, 0)
+        return true
+      },
+      handlePaste: (_view, event) => {
+        const items = event.clipboardData?.items
+        if (!items) return false
+
+        const imageFiles: File[] = []
+        for (let i = 0; i < items.length; i++) {
+          if (items[i].type.startsWith('image/')) {
+            const file = items[i].getAsFile()
+            if (file) imageFiles.push(file)
+          }
+        }
+
+        if (imageFiles.length === 0) return false
+
+        event.preventDefault()
+        setTimeout(() => {
+          uploadAndInsertImages(imageFiles, editor)
+        }, 0)
+        return true
+      },
     },
     onUpdate: ({ editor }) => {
       onSave(editor.getJSON())
@@ -106,21 +171,56 @@ export function Editor({ initialContent, title, onChangeTitle, onSave }: EditorP
     }
   }
 
+  const handleImageButtonClick = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || !editor) return
+    uploadAndInsertImages(Array.from(files), editor)
+    // Reset input so same file can be selected again
+    e.target.value = ''
+  }
+
   return (
     <div className="flex flex-col flex-1 w-full max-w-none">
-      <input
-        type="text"
-        value={title}
-        onChange={(e) => onChangeTitle(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault()
-            editor?.commands.focus()
-          }
-        }}
-        placeholder="Untitled"
-        className="text-4xl font-bold bg-transparent border-none outline-none px-4 py-4 w-full placeholder:text-muted-foreground/50"
-      />
+      <div className="flex items-center gap-2 px-4">
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => onChangeTitle(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              editor?.commands.focus()
+            }
+          }}
+          placeholder="Untitled"
+          className="text-4xl font-bold bg-transparent border-none outline-none py-4 w-full placeholder:text-muted-foreground/50"
+        />
+        <button
+          type="button"
+          onClick={handleImageButtonClick}
+          disabled={isUploading}
+          className="flex-shrink-0 p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors cursor-pointer disabled:opacity-50"
+          title="이미지 추가"
+        >
+          {isUploading ? (
+            <Loader2 className="h-5 w-5 animate-spin" />
+          ) : (
+            <ImagePlus className="h-5 w-5" />
+          )}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/gif,image/webp"
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
+        />
+      </div>
       {/* Use onKeyDownCapture to handle event in capture phase */}
       <div onKeyDownCapture={handleKeyDownCapture} className="flex-1 w-full">
         <EditorContent editor={editor} className="h-full" />

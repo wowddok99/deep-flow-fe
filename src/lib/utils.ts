@@ -26,3 +26,22 @@ export function extractTextFromContent(content: any, maxLength: number = 200): s
     traverse(content);
     return text.trim().slice(0, maxLength).trim();
 }
+
+export function extractImageUrls(content: any): string[] {
+    if (!content) return [];
+    const urls: string[] = [];
+
+    const traverse = (node: any) => {
+        if (node.type === 'image' && node.attrs?.src) {
+            urls.push(node.attrs.src);
+        }
+        if (node.content && Array.isArray(node.content)) {
+            for (const child of node.content) {
+                traverse(child);
+            }
+        }
+    };
+
+    traverse(content);
+    return urls;
+}

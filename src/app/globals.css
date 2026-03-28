@@ -184,3 +184,94 @@
   /* Level 15: Square */
   .tiptap ul ul ul ul ul ul ul ul ul ul ul ul ul ul ul { list-style-type: square; }
 }
+
+/* Resizable Image Styles */
+.resizable-image-wrapper {
+  display: inline-block;
+  max-width: 100%;
+  margin: 0.5rem 0;
+  line-height: 0;
+}
+
+.resizable-image-container {
+  position: relative;
+  display: inline-block;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+
+.resizable-image-container.selected {
+  box-shadow: none;
+}
+
+.resizable-image-container.resizing {
+  user-select: none;
+}
+
+.resizable-image-container img {
+  border-radius: 0.375rem;
+}
+
+.resize-handle {
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.resizable-image-container:hover .resize-handle {
+  opacity: 1;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 40px;
+  border-radius: 2px;
+  background: hsl(var(--ring));
+}
+
+.resize-handle-right {
+  right: 0;
+}
+
+.resize-handle-right::after {
+  right: 2px;
+}
+
+.resize-handle-left {
+  left: 0;
+}
+
+.resize-handle-left::after {
+  left: 2px;
+}
+
+.image-delete-button {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: hsl(0 0% 0% / 0.6);
+  color: white;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  z-index: 10;
+}
+
+.image-delete-button:hover {
+  background: hsl(0 70% 50%);
+}

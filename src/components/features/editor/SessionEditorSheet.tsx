@@ -8,7 +8,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/lib/api"
 import { Edit3, Loader2, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { extractTextFromContent } from "@/lib/utils"
+import { extractTextFromContent, extractImageUrls } from "@/lib/utils"
 
 export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
   const { sessionId, isRunning } = useTimerStore()
@@ -54,21 +54,12 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
   const [title, setTitle] = React.useState("")
   const titleRef = React.useRef("") // Ref to access latest title in timeouts
 
-  // Reset title when sessionId changes to avoid stale data
+  // Sync title from session (handles both initial load and session change)
   React.useEffect(() => {
-    if (open) { // Only if open, though sessionId change implies context switch
-        setTitle("")
-        titleRef.current = ""
-    }
-  }, [sessionId, open])
-
-  // Sync title from session
-  React.useEffect(() => {
-    if (session?.title) {
-      setTitle(session.title)
-      titleRef.current = session.title
-    }
-  }, [session?.title])
+    const newTitle = session?.title || ""
+    setTitle(newTitle)
+    titleRef.current = newTitle
+  }, [session?.title, sessionId])
 
   const handleSave = async (content: any) => {
     if (!sessionId) return
@@ -80,7 +71,7 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
         title: titleRef.current, // Use ref for latest value
         summary,
         tags: session?.tags || [],
-        imageUrls: session?.imageUrls || []
+        imageUrls: extractImageUrls(content)
       })
       isDirtyRef.current = false
       // Ensure next fetch gets fresh data
@@ -178,7 +169,7 @@ export function SessionEditorSheet({ trigger }: { trigger?: React.ReactNode }) {
         )}
       </SheetTrigger>
       <SheetContent
-        className="w-[400px] sm:w-[540px] flex flex-col h-full bg-background/95 dark:bg-zinc-950/95 border-l-0 shadow-2xl backdrop-blur-sm [&>button]:hidden outline-none"
+        className="w-full sm:w-[600px] flex flex-col h-full bg-background/95 dark:bg-zinc-950/95 border-l-0 shadow-2xl backdrop-blur-sm sm:max-w-[600px] [&>button]:hidden outline-none"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}

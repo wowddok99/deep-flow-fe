@@ -78,6 +78,22 @@ export const sessionsApi = {
   }
 };
 
+export const imagesApi = {
+  upload: async (files: File[], getToken: () => string | null): Promise<string[]> => {
+    const formData = new FormData();
+    files.forEach(file => formData.append('files', file));
+    const token = getToken();
+    const res = await fetch('/api/v1/images', {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData,
+    });
+    if (!res.ok) throw new Error(`이미지 업로드 실패: ${res.status}`);
+    const json: ApiResponse<string[]> = await res.json();
+    return json.data;
+  }
+};
+
 // Export as 'api' to maintain backward compatibility with existing imports,
 // ensuring we don't conflict with the 'api' import from axios.
 export { sessionsApi as api };
