@@ -32,6 +32,7 @@ export const CATEGORY_LABELS: Record<AchievementCategory, string> = {
 }
 
 export const DEEP_DIVE_THRESHOLDS: Record<string, number> = {
+  'D-00': 10,
   'D-01': 300,
   'D-02': 900,
   'D-03': 1800,

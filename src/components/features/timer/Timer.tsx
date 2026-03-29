@@ -5,81 +5,50 @@ import { motion, AnimatePresence } from "framer-motion"
 import { Play, Square } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useTimerStore } from "@/store/timer-store"
-import { api, achievementsApi, type AchievementResponse, type UserAchievementResponse } from "@/lib/api"
+import { api } from "@/lib/api"
 import { getApiErrorCode } from "@/lib/axios"
 import { cn } from "@/lib/utils"
-import { DEEP_DIVE_THRESHOLDS } from "@/lib/achievement"
 import { AchievementToast, type AchievementNotification } from "@/components/features/achievement/AchievementToast"
-import { useQueryClient } from "@tanstack/react-query"
-
-interface DeepDiveTarget {
-  code: string
-  name: string
-  description: string
-  grade: number
-  seconds: number
-  notified: boolean
-}
+import { useAchievementSSE } from "@/hooks/useAchievementSSE"
 
 export function Timer() {
   const { isRunning, startTime, sessionId, startTimer, stopTimer } = useTimerStore()
   const [elapsed, setElapsed] = React.useState(0)
-  const queryClient = useQueryClient()
 
   // 칭호 알림 상태
   const [notifications, setNotifications] = React.useState<AchievementNotification[]>([])
-  const deepDiveTargetsRef = React.useRef<DeepDiveTarget[]>([])
-  const beforeCodesRef = React.useRef<Set<string>>(new Set())
 
   const dismissNotification = React.useCallback((code: string) => {
     setNotifications(prev => prev.filter(n => n.code !== code))
   }, [])
 
-  // 세션 시작 시 칭호 데이터 로드
-  const loadAchievementData = React.useCallback(async () => {
-    try {
-      const [all, mine] = await Promise.all([
-        achievementsApi.getAll(),
-        achievementsApi.getMine(),
-      ])
-
-      // 세션 종료 후 비교용 - 현재 달성 코드 저장
-      beforeCodesRef.current = new Set(mine.map(a => a.code))
-
-      // DEEP_DIVE 미달성 칭호 필터링
-      deepDiveTargetsRef.current = all
-        .filter(a => a.category === 'DEEP_DIVE' && !a.achieved)
-        .map(a => ({
-          code: a.code,
-          name: a.name,
-          description: a.description,
-          grade: a.grade,
-          seconds: DEEP_DIVE_THRESHOLDS[a.code] || 0,
-          notified: false,
-        }))
-        .filter(t => t.seconds > 0)
-        .sort((a, b) => a.seconds - b.seconds)
-    } catch (e) {
-      console.debug("칭호 데이터 로드 실패", e)
-    }
+  // SSE로 칭호 알림 수신
+  const handleAchievement = React.useCallback((notification: AchievementNotification) => {
+    setNotifications(prev => {
+      // 중복 방지
+      if (prev.some(n => n.code === notification.code)) return prev
+      return [...prev, notification]
+    })
   }, [])
+
+  useAchievementSSE({ onAchievement: handleAchievement })
 
   // Sync active session on mount
   React.useEffect(() => {
-    if (!isRunning) {
-        api.sessions.list().then(({ content }) => {
-            const activeSession = content.find(s => s.status === 'ONGOING');
-            if (activeSession) {
-                startTimer(activeSession.id, activeSession.startTime);
-                loadAchievementData()
-            }
-        }).catch(err => {
-            console.debug("Failed to sync session", err);
-        });
-    }
+    api.sessions.list().then(({ content }) => {
+      const activeSession = content.find(s => s.status === 'ONGOING');
+      if (activeSession) {
+        startTimer(activeSession.id, activeSession.startTime);
+      } else if (isRunning) {
+        // persist된 상태가 남아있지만 서버에 ONGOING 세션 없음 → 초기화
+        stopTimer();
+      }
+    }).catch(err => {
+      console.debug("Failed to sync session", err);
+    });
   }, []);
 
-  // 타이머 업데이트 + DEEP_DIVE 선행 알림 체크
+  // 타이머 업데이트
   React.useEffect(() => {
     let interval: NodeJS.Timeout
 
@@ -89,21 +58,6 @@ export function Timer() {
         const now = new Date().getTime()
         const elapsedMs = now - start
         setElapsed(elapsedMs)
-
-        // DEEP_DIVE 선행 알림 체크 (5초 버퍼)
-        const elapsedSec = elapsedMs / 1000
-        for (const target of deepDiveTargetsRef.current) {
-          if (!target.notified && elapsedSec >= target.seconds + 5) {
-            target.notified = true
-            setNotifications(prev => [...prev, {
-              code: target.code,
-              name: target.name,
-              description: target.description,
-              grade: target.grade,
-              type: 'preview',
-            }])
-          }
-        }
       }
       update()
       interval = setInterval(update, 50)
@@ -130,8 +84,6 @@ export function Timer() {
     try {
       const session = await api.sessions.start()
       startTimer(session.id, session.startTime)
-      // 세션 시작 후 칭호 데이터 로드
-      loadAchievementData()
     } catch (error: unknown) {
       console.error("Failed to start session", error)
 
@@ -141,7 +93,6 @@ export function Timer() {
               const ongoingSession = content.find(s => s.status === 'ONGOING')
               if (ongoingSession) {
                   startTimer(ongoingSession.id, ongoingSession.startTime)
-                  loadAchievementData()
                   return
               }
           } catch (syncError) {
@@ -159,41 +110,9 @@ export function Timer() {
     const currentStartTime = startTime
 
     stopTimer()
-    deepDiveTargetsRef.current = []
 
     try {
       await api.sessions.stop(currentId)
-
-      // 비동기 처리 대기 후 신규 칭호 확인
-      setTimeout(async () => {
-        try {
-          const after = await achievementsApi.getMine()
-          const newAchievements = after.filter(a => !beforeCodesRef.current.has(a.code))
-
-          if (newAchievements.length > 0) {
-            // 기존 preview 알림 제거 후 achieved 알림 추가
-            setNotifications(prev => {
-              const withoutPreviews = prev.filter(n => n.type !== 'preview')
-              return [
-                ...withoutPreviews,
-                ...newAchievements.map(a => ({
-                  code: a.code,
-                  name: a.name,
-                  description: a.description,
-                  grade: a.grade,
-                  type: 'achieved' as const,
-                }))
-              ]
-            })
-          }
-
-          // 칭호 쿼리 갱신
-          queryClient.invalidateQueries({ queryKey: ['achievements'] })
-          queryClient.invalidateQueries({ queryKey: ['achievements-mine'] })
-        } catch (e) {
-          console.debug("칭호 확인 실패", e)
-        }
-      }, 1000)
     } catch (error: any) {
       console.error("Failed to stop session", error)
       if (error.response?.status !== 404 && currentStartTime) {
