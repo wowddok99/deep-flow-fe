@@ -95,7 +95,7 @@ export function AchievementSheet({ open, onOpenChange, displayCode, onDisplayCha
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
-        className="w-full sm:w-[600px] flex flex-col h-full bg-background/95 dark:bg-zinc-950/95 border-l-0 shadow-2xl backdrop-blur-sm sm:max-w-[600px] [&>button]:hidden outline-none"
+        className="w-full sm:w-[600px] flex flex-col h-full bg-background border-l-0 shadow-2xl sm:max-w-[600px] [&>button]:hidden outline-none"
       >
         <div className="absolute left-2 top-1/2 -translate-y-1/2 z-50">
           <Button
@@ -110,7 +110,7 @@ export function AchievementSheet({ open, onOpenChange, displayCode, onDisplayCha
         </div>
 
         {/* Header + Category Filter (Toss style unified) */}
-        <div className="sticky top-0 z-10 bg-background/95 dark:bg-zinc-950/95 backdrop-blur-sm">
+        <div className="sticky top-0 z-10 bg-background backdrop-blur-sm">
           <div className="flex items-center justify-between px-4 pt-1 pb-3">
             <SheetHeader className="space-y-0 p-0">
               <SheetTitle className="text-base">칭호 도감</SheetTitle>
@@ -145,23 +145,14 @@ export function AchievementSheet({ open, onOpenChange, displayCode, onDisplayCha
                     }
                   }
                 }}
-                className="relative px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap cursor-pointer z-0 flex-shrink-0"
-              >
-                {selectedCategory === cat && (
-                  <motion.span
-                    layoutId="achievement-tab"
-                    className="absolute inset-0 rounded-full bg-primary z-[-1]"
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span className={cn(
-                  'relative',
+                className={cn(
+                  'px-3 py-1.5 rounded-full text-xs whitespace-nowrap cursor-pointer flex-shrink-0 transition-colors',
                   selectedCategory === cat
-                    ? 'text-primary-foreground'
+                    ? 'bg-foreground text-background font-semibold'
                     : 'text-muted-foreground hover:text-foreground'
-                )}>
+                )}
+              >
                   {cat === 'ALL' ? '전체' : CATEGORY_LABELS[cat]}
-                </span>
               </button>
             ))}
           </div>
