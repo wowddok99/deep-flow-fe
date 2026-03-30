@@ -122,7 +122,7 @@ export function Timer() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-12 px-4 sm:px-6">
+    <div className="flex flex-col items-center justify-center h-full gap-[clamp(1rem,4vh,3rem)] px-4 sm:px-6 w-full @container">
       <motion.div
         className="relative"
         initial={{ opacity: 0, scale: 0.9 }}
@@ -134,7 +134,7 @@ export function Timer() {
         transition={{ duration: 0.5 }}
       >
         <div className={cn(
-          "relative text-[10vw] md:text-[12rem] font-bold tracking-tighter tabular-nums leading-none select-none font-mono transition-colors duration-700",
+          "relative text-[clamp(2rem,12cqw,12rem)] font-bold tracking-tighter tabular-nums leading-none select-none font-mono transition-colors duration-700",
           isRunning ? "text-foreground" : "text-muted-foreground/30"
         )}>
           {formatTime(elapsed)}
@@ -152,10 +152,10 @@ export function Timer() {
             >
               <Button
                 size="icon"
-                className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform cursor-pointer"
+                className="h-[clamp(3rem,8vh,5rem)] w-[clamp(3rem,8vh,5rem)] rounded-full text-2xl shadow-xl hover:scale-105 transition-transform cursor-pointer"
                 onClick={handleStart}
               >
-                <Play className="h-8 w-8 ml-1" />
+                <Play className="h-[clamp(1.2rem,3vh,2rem)] w-[clamp(1.2rem,3vh,2rem)] ml-0.5" />
                 <span className="sr-only">Start</span>
               </Button>
             </motion.div>
@@ -169,10 +169,10 @@ export function Timer() {
               <Button
                 size="icon"
                 variant="outline"
-                className="h-20 w-20 rounded-full text-2xl shadow-xl hover:scale-105 transition-transform border-2 cursor-pointer"
+                className="h-[clamp(3rem,8vh,5rem)] w-[clamp(3rem,8vh,5rem)] rounded-full text-2xl shadow-xl hover:scale-105 transition-transform border-2 cursor-pointer"
                 onClick={handleStop}
               >
-                <Square className="h-8 w-8 fill-current" />
+                <Square className="h-[clamp(1.2rem,3vh,2rem)] w-[clamp(1.2rem,3vh,2rem)] fill-current" />
                 <span className="sr-only">Stop</span>
               </Button>
             </motion.div>

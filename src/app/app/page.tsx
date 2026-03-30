@@ -1,17 +1,15 @@
+"use client"
+
 import { Timer } from "@/components/features/timer/Timer"
-import { Sidebar } from "@/components/features/sidebar/Sidebar"
+import { RecentSessions } from "@/components/features/sessions/RecentSessions"
 
 export default function Home() {
   return (
-    <main className="flex h-screen w-full overflow-hidden bg-background relative selection:bg-primary/20">
-      <div className="flex-1 flex flex-col items-center justify-center relative">
+    <div className="flex h-full">
+      <div className="flex-1 flex flex-col items-center justify-center relative min-w-0 overflow-hidden">
         <Timer />
-        
-        <footer className="absolute bottom-8 text-center opacity-30 text-xs">
-            <p>Deep Flow &copy; 2025</p>
-        </footer>
       </div>
-      <Sidebar />
-    </main>
+      <RecentSessions />
+    </div>
   )
 }
