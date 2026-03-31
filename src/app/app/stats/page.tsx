@@ -2,11 +2,18 @@
 
 import * as React from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Tooltip, AreaChart, Area } from 'recharts'
-import { Clock, ListChecks, TrendingUp, Flame, Trophy } from 'lucide-react'
+import { Clock, ListChecks, TrendingUp, Flame, Trophy, Loader2 } from 'lucide-react'
 import { StatCard } from '@/components/features/stats/StatCard'
 import { CalendarHeatmap } from '@/components/features/stats/CalendarHeatmap'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { mockDashboard, mockWeeklyTrend, mockDayOfWeek, mockHourly, mockCalendar, mockActivity } from '@/lib/mock-data'
+import { useDashboard, useWeeklyTrend, useDayOfWeek, useHourly, useCalendar, useLogActivity } from '@/hooks/useStats'
+
+const DAY_LABELS: Record<string, string> = {
+  MONDAY: '월', TUESDAY: '화', WEDNESDAY: '수', THURSDAY: '목',
+  FRIDAY: '금', SATURDAY: '토', SUNDAY: '일',
+}
+
+const DAY_ORDER = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']
 
 function formatHours(seconds: number): string {
   const h = Math.floor(seconds / 3600)
@@ -24,29 +31,54 @@ function calcChange(current: number, previous: number): number {
   return Math.round(((current - previous) / previous) * 100)
 }
 
+const tooltipStyle = {
+  backgroundColor: 'hsl(var(--card))',
+  border: '1px solid hsl(var(--border))',
+  borderRadius: '8px',
+  fontSize: '12px',
+}
+
 export default function StatsPage() {
-  const [calYear, setCalYear] = React.useState(2026)
-  const [calMonth, setCalMonth] = React.useState(3)
+  const now = new Date()
+  const [calYear, setCalYear] = React.useState(now.getFullYear())
+  const [calMonth, setCalMonth] = React.useState(now.getMonth() + 1)
 
-  const d = mockDashboard
-  const sessionChange = calcChange(d.thisWeekSessions, d.lastWeekSessions)
-  const durationChange = calcChange(d.thisWeekDurationSeconds, d.lastWeekDurationSeconds)
+  const { data: dashboard, isLoading: dashLoading } = useDashboard()
+  const { data: weeklyTrend } = useWeeklyTrend()
+  const { data: dayOfWeek } = useDayOfWeek()
+  const { data: hourly } = useHourly()
+  const { data: calendar } = useCalendar(calYear, calMonth)
+  const { data: activity } = useLogActivity()
 
-  const weeklyChartData = mockWeeklyTrend.map(w => ({
-    name: `${w.weekStart.slice(5)}`,
+  const sessionChange = dashboard ? calcChange(dashboard.thisWeekSessions, dashboard.lastWeekSessions) : undefined
+  const durationChange = dashboard ? calcChange(dashboard.thisWeekDurationSeconds, dashboard.lastWeekDurationSeconds) : undefined
+
+  const weeklyChartData = weeklyTrend?.map(w => ({
+    name: w.weekStart.slice(5),
     시간: Math.round(w.totalDurationSeconds / 3600 * 10) / 10,
     세션: w.totalSessions,
-  }))
+  })) ?? []
 
-  const dayChartData = mockDayOfWeek.map(d => ({
-    name: d.label,
-    시간: Math.round(d.totalDurationSeconds / 3600 * 10) / 10,
-  }))
+  const dayChartData = dayOfWeek
+    ?.slice()
+    .sort((a, b) => DAY_ORDER.indexOf(a.dayOfWeek) - DAY_ORDER.indexOf(b.dayOfWeek))
+    .map(d => ({
+      name: DAY_LABELS[d.dayOfWeek] ?? d.dayOfWeek,
+      시간: Math.round(d.totalDurationSeconds / 3600 * 10) / 10,
+    })) ?? []
 
-  const hourlyChartData = mockHourly.map(h => ({
+  const hourlyChartData = hourly?.map(h => ({
     name: `${h.hour}시`,
     세션: h.sessionCount,
-  }))
+  })) ?? []
+
+  if (dashLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <ScrollArea className="h-full">
@@ -55,11 +87,11 @@ export default function StatsPage() {
 
         {/* Overview Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <StatCard icon={Clock} label="총 집중시간" value={formatHours(d.totalDurationSeconds)} change={durationChange} />
-          <StatCard icon={ListChecks} label="세션 수" value={`${d.totalSessions}회`} change={sessionChange} />
-          <StatCard icon={TrendingUp} label="평균 세션" value={formatAvg(d.avgSessionDurationSeconds)} />
-          <StatCard icon={Flame} label="스트릭" value={`${d.currentStreak}일`} sub={`최장 ${d.longestStreak}일`} />
-          <StatCard icon={Trophy} label="칭호" value={`${d.achievementCount}/${d.totalAchievements}`} />
+          <StatCard icon={Clock} label="총 집중시간" value={formatHours(dashboard?.totalDurationSeconds ?? 0)} change={durationChange} />
+          <StatCard icon={ListChecks} label="세션 수" value={`${dashboard?.totalSessions ?? 0}회`} change={sessionChange} />
+          <StatCard icon={TrendingUp} label="평균 세션" value={formatAvg(dashboard?.avgSessionDurationSeconds ?? 0)} />
+          <StatCard icon={Flame} label="스트릭" value={`${dashboard?.currentStreak ?? 0}일`} sub={`최장 ${dashboard?.longestStreak ?? 0}일`} />
+          <StatCard icon={Trophy} label="칭호" value={`${dashboard?.achievementCount ?? 0}/${dashboard?.totalAchievements ?? 0}`} />
         </div>
 
         {/* Charts Row */}
@@ -72,11 +104,7 @@ export default function StatsPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
                 <XAxis dataKey="name" className="text-xs" tick={{ fontSize: 11 }} />
                 <YAxis className="text-xs" tick={{ fontSize: 11 }} />
-                <Tooltip
-                  cursor={{ fill: 'transparent' }}
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
-                />
+                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={tooltipStyle} labelStyle={{ color: 'hsl(var(--foreground))' }} />
                 <Bar dataKey="시간" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -90,10 +118,7 @@ export default function StatsPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" horizontal={false} />
                 <XAxis type="number" className="text-xs" tick={{ fontSize: 11 }} />
                 <YAxis dataKey="name" type="category" className="text-xs" tick={{ fontSize: 11 }} width={30} />
-                <Tooltip
-                  cursor={{ fill: 'transparent' }}
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                />
+                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={tooltipStyle} />
                 <Bar dataKey="시간" fill="hsl(142, 71%, 45%)" radius={[0, 4, 4, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -108,10 +133,7 @@ export default function StatsPage() {
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
               <XAxis dataKey="name" className="text-xs" tick={{ fontSize: 10 }} interval={2} />
               <YAxis className="text-xs" tick={{ fontSize: 11 }} />
-              <Tooltip
-                cursor={{ fill: 'transparent' }}
-                contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-              />
+              <Tooltip cursor={{ fill: 'transparent' }} contentStyle={tooltipStyle} />
               <Area type="monotone" dataKey="세션" stroke="hsl(217, 91%, 60%)" fill="hsl(217, 91%, 60%)" fillOpacity={0.15} />
             </AreaChart>
           </ResponsiveContainer>
@@ -123,7 +145,7 @@ export default function StatsPage() {
           <div className="rounded-xl border border-border bg-card p-4">
             <h3 className="text-sm font-medium mb-4">월간 히트맵</h3>
             <CalendarHeatmap
-              data={mockCalendar}
+              data={calendar ?? []}
               year={calYear}
               month={calMonth}
               onMonthChange={(y, m) => { setCalYear(y); setCalMonth(m) }}
@@ -136,15 +158,15 @@ export default function StatsPage() {
             <div className="space-y-4 mt-6">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">총 로그</span>
-                <span className="text-sm font-medium">{mockActivity.totalLogs}개</span>
+                <span className="text-sm font-medium">{activity?.totalLogs ?? 0}개</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">총 이미지</span>
-                <span className="text-sm font-medium">{mockActivity.totalImages}장</span>
+                <span className="text-sm font-medium">{activity?.totalImages ?? 0}장</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground">평균 글자 수</span>
-                <span className="text-sm font-medium">{mockActivity.avgContentLength}자</span>
+                <span className="text-sm font-medium">{activity?.avgContentLength ?? 0}자</span>
               </div>
             </div>
           </div>

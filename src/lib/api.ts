@@ -133,6 +133,82 @@ export const achievementsApi = {
   },
 }
 
+// Stats types
+export interface DashboardOverview {
+  totalSessions: number
+  totalDurationSeconds: number
+  avgSessionDurationSeconds: number
+  currentStreak: number
+  longestStreak: number
+  achievementCount: number
+  totalAchievements: number
+  thisWeekSessions: number
+  thisWeekDurationSeconds: number
+  lastWeekSessions: number
+  lastWeekDurationSeconds: number
+}
+
+export interface WeeklyTrend {
+  weekStart: string
+  weekEnd: string
+  totalSessions: number
+  totalDurationSeconds: number
+}
+
+export interface DayOfWeekStats {
+  dayOfWeek: string
+  totalSessions: number
+  totalDurationSeconds: number
+}
+
+export interface HourlyDistribution {
+  hour: number
+  sessionCount: number
+}
+
+export interface DailyStats {
+  date: string
+  totalSessions: number
+  totalDurationSeconds: number
+}
+
+export interface LogActivity {
+  totalLogs: number
+  totalImages: number
+  avgContentLength: number
+}
+
+export const statsApi = {
+  dashboard: async (): Promise<DashboardOverview> => {
+    const res = await axiosInstance.get<ApiResponse<DashboardOverview>>('/stats/dashboard')
+    return res.data.data
+  },
+  weeklyTrend: async (weeks = 4): Promise<WeeklyTrend[]> => {
+    const res = await axiosInstance.get<ApiResponse<WeeklyTrend[]>>('/stats/weekly-trend', {
+      params: { weeks }
+    })
+    return res.data.data
+  },
+  dayOfWeek: async (): Promise<DayOfWeekStats[]> => {
+    const res = await axiosInstance.get<ApiResponse<DayOfWeekStats[]>>('/stats/day-of-week')
+    return res.data.data
+  },
+  hourly: async (): Promise<HourlyDistribution[]> => {
+    const res = await axiosInstance.get<ApiResponse<HourlyDistribution[]>>('/stats/hourly')
+    return res.data.data
+  },
+  calendar: async (year: number, month: number): Promise<DailyStats[]> => {
+    const res = await axiosInstance.get<ApiResponse<DailyStats[]>>('/stats/calendar', {
+      params: { year, month }
+    })
+    return res.data.data
+  },
+  activity: async (): Promise<LogActivity> => {
+    const res = await axiosInstance.get<ApiResponse<LogActivity>>('/stats/activity')
+    return res.data.data
+  },
+}
+
 // Export as 'api' to maintain backward compatibility with existing imports,
 // ensuring we don't conflict with the 'api' import from axios.
 export { sessionsApi as api };
