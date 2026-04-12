@@ -111,7 +111,12 @@ export function CalendarHeatmap({ data, year, month, onMonthChange }: CalendarHe
               </TooltipTrigger>
               <TooltipContent>
                 <p className="text-xs">
-                  {day.date} · {day.totalSessions}세션
+                  {day.date}
+                  {day.totalSessions > 0
+                    ? ` · ${day.totalSessions}세션`
+                    : day.totalDurationSeconds > 0
+                      ? ' · 연속 집중'
+                      : ''}
                   {day.totalDurationSeconds > 0 && ` · ${formatDuration(day.totalDurationSeconds)}`}
                 </p>
               </TooltipContent>

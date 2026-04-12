@@ -22,13 +22,24 @@ function formatHours(seconds: number): string {
 }
 
 function formatAvg(seconds: number): string {
-  const m = Math.floor(seconds / 60)
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  if (h > 0) return `${h}h ${m}m`
   return `${m}분`
 }
 
-function calcChange(current: number, previous: number): number {
-  if (previous === 0) return 0
-  return Math.round(((current - previous) / previous) * 100)
+interface ChangeResult {
+  type: 'percent' | 'absolute'
+  value: number
+  direction: 'up' | 'down' | 'same'
+}
+
+function calcChange(current: number, previous: number): ChangeResult | null {
+  if (previous === 0 && current === 0) return null
+  if (previous === 0) return { type: 'absolute', value: current, direction: 'up' }
+  const percent = Math.round(((current - previous) / previous) * 100)
+  if (percent === 0) return { type: 'percent', value: 0, direction: 'same' }
+  return { type: 'percent', value: Math.abs(percent), direction: percent > 0 ? 'up' : 'down' }
 }
 
 const tooltipStyle = {
@@ -53,8 +64,10 @@ export default function StatsPage() {
   const sessionChange = dashboard ? calcChange(dashboard.thisWeekSessions, dashboard.lastWeekSessions) : undefined
   const durationChange = dashboard ? calcChange(dashboard.thisWeekDurationSeconds, dashboard.lastWeekDurationSeconds) : undefined
 
+
   const weeklyChartData = weeklyTrend?.map(w => ({
     name: w.weekStart.slice(5),
+    period: `${w.weekStart.slice(5)} ~ ${w.weekEnd.slice(5)}`,
     시간: Math.round(w.totalDurationSeconds / 3600 * 10) / 10,
     세션: w.totalSessions,
   })) ?? []
@@ -87,8 +100,8 @@ export default function StatsPage() {
 
         {/* Overview Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
-          <StatCard icon={Clock} label="총 집중시간" value={formatHours(dashboard?.totalDurationSeconds ?? 0)} change={durationChange} />
-          <StatCard icon={ListChecks} label="세션 수" value={`${dashboard?.totalSessions ?? 0}회`} change={sessionChange} />
+          <StatCard icon={Clock} label="총 집중시간" value={formatHours(dashboard?.totalDurationSeconds ?? 0)} change={durationChange} unit="시간" formatAbsolute={formatHours} />
+          <StatCard icon={ListChecks} label="세션 수" value={`${dashboard?.totalSessions ?? 0}회`} change={sessionChange} unit="회" />
           <StatCard icon={TrendingUp} label="평균 세션" value={formatAvg(dashboard?.avgSessionDurationSeconds ?? 0)} />
           <StatCard icon={Flame} label="스트릭" value={`${dashboard?.currentStreak ?? 0}일`} sub={`최장 ${dashboard?.longestStreak ?? 0}일`} />
           <StatCard icon={Trophy} label="칭호" value={`${dashboard?.achievementCount ?? 0}/${dashboard?.totalAchievements ?? 0}`} />
@@ -104,7 +117,7 @@ export default function StatsPage() {
                 <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
                 <XAxis dataKey="name" className="text-xs" tick={{ fontSize: 11 }} />
                 <YAxis className="text-xs" tick={{ fontSize: 11 }} />
-                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={tooltipStyle} labelStyle={{ color: 'hsl(var(--foreground))' }} />
+                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={tooltipStyle} labelStyle={{ color: 'hsl(var(--foreground))' }} labelFormatter={(_label, payload) => payload?.[0]?.payload?.period ?? _label} />
                 <Bar dataKey="시간" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
