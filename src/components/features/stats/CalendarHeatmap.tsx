@@ -104,14 +104,19 @@ export function CalendarHeatmap({ data, year, month, onMonthChange }: CalendarHe
                 <div className={cn(
                   'aspect-square rounded-sm flex items-center justify-center text-[10px] transition-colors',
                   getIntensity(day.totalDurationSeconds),
-                  day.totalSessions > 0 ? 'text-foreground' : 'text-muted-foreground'
+                  (day.totalSessions > 0 || day.totalDurationSeconds > 0) ? 'text-foreground' : 'text-muted-foreground'
                 )}>
                   {dateNum}
                 </div>
               </TooltipTrigger>
               <TooltipContent>
                 <p className="text-xs">
-                  {day.date} · {day.totalSessions}세션
+                  {day.date}
+                  {day.totalSessions > 0
+                    ? ` · ${day.totalSessions}세션`
+                    : day.totalDurationSeconds > 0
+                      ? ' · 연속 집중'
+                      : ''}
                   {day.totalDurationSeconds > 0 && ` · ${formatDuration(day.totalDurationSeconds)}`}
                 </p>
               </TooltipContent>
