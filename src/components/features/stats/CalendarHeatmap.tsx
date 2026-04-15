@@ -104,7 +104,7 @@ export function CalendarHeatmap({ data, year, month, onMonthChange }: CalendarHe
                 <div className={cn(
                   'aspect-square rounded-sm flex items-center justify-center text-[10px] transition-colors',
                   getIntensity(day.totalDurationSeconds),
-                  day.totalSessions > 0 ? 'text-foreground' : 'text-muted-foreground'
+                  (day.totalSessions > 0 || day.totalDurationSeconds > 0) ? 'text-foreground' : 'text-muted-foreground'
                 )}>
                   {dateNum}
                 </div>
