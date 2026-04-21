@@ -209,6 +209,152 @@ export const statsApi = {
   },
 }
 
+// ============================================================
+// Crew
+// ============================================================
+
+export type CrewVisibility = 'PUBLIC' | 'PRIVATE'
+export type CrewRole = 'OWNER' | 'MEMBER'
+export type InviteTtl = 5 | 30 | 60 | 1440
+
+export interface CrewSummary {
+  id: number
+  name: string
+  description: string | null
+  visibility: CrewVisibility
+  maxMembers: number | null
+  memberCount: number
+  activeNowCount: number
+  role: CrewRole | null
+  createdAt: string
+}
+
+export interface CrewMemberInfo {
+  userId: number
+  name: string
+  role: CrewRole
+  joinedAt: string
+  isActiveNow: boolean
+}
+
+export interface CrewDetail {
+  id: number
+  name: string
+  description: string | null
+  visibility: CrewVisibility
+  maxMembers: number | null
+  memberCount: number
+  activeNowCount: number
+  myRole: CrewRole
+  inviteCode: string | null
+  inviteCodeExpiresAt: string | null
+  createdAt: string
+  members: CrewMemberInfo[]
+}
+
+export interface InviteCodeIssued {
+  code: string
+  expiresAt: string
+}
+
+export interface CrewActivity {
+  activeNowCount: number
+  todayParticipantCount: number
+  todayTotalDurationSeconds: number
+  weeklyTrend: { date: string; totalDurationSeconds: number }[]
+  memberRanking: { userId: number; name: string; totalDurationSeconds: number }[]
+}
+
+export interface CreateCrewRequest {
+  name: string
+  description?: string
+  visibility: CrewVisibility
+  maxMembers?: number | null
+}
+
+export interface UpdateCrewRequest {
+  name?: string
+  description?: string
+  visibility?: CrewVisibility
+  maxMembers?: number | null
+}
+
+export const crewsApi = {
+  create: async (payload: CreateCrewRequest): Promise<CrewSummary> => {
+    const res = await axiosInstance.post<ApiResponse<CrewSummary>>('/crews', payload)
+    return res.data.data
+  },
+
+  listMine: async (): Promise<CrewSummary[]> => {
+    const res = await axiosInstance.get<ApiResponse<CrewSummary[]>>('/crews')
+    return res.data.data
+  },
+
+  detail: async (crewId: number): Promise<CrewDetail> => {
+    const res = await axiosInstance.get<ApiResponse<CrewDetail>>(`/crews/${crewId}`)
+    return res.data.data
+  },
+
+  search: async (q: string, cursorId?: number, size = 20): Promise<CursorResponse<CrewSummary>> => {
+    const res = await axiosInstance.get<ApiResponse<CursorResponse<CrewSummary>>>('/crews/search', {
+      params: { q, cursorId, size },
+    })
+    return res.data.data
+  },
+
+  update: async (crewId: number, payload: UpdateCrewRequest): Promise<CrewSummary> => {
+    const res = await axiosInstance.patch<ApiResponse<CrewSummary>>(`/crews/${crewId}`, payload)
+    return res.data.data
+  },
+
+  disband: async (crewId: number): Promise<void> => {
+    await axiosInstance.delete(`/crews/${crewId}`)
+  },
+
+  issueInviteCode: async (crewId: number, ttlMinutes: InviteTtl): Promise<InviteCodeIssued> => {
+    const res = await axiosInstance.post<ApiResponse<InviteCodeIssued>>(`/crews/${crewId}/invite`, { ttlMinutes })
+    return res.data.data
+  },
+
+  joinByCode: async (code: string): Promise<CrewSummary> => {
+    const res = await axiosInstance.post<ApiResponse<CrewSummary>>('/crews/join', { code })
+    return res.data.data
+  },
+
+  joinPublic: async (crewId: number): Promise<CrewSummary> => {
+    const res = await axiosInstance.post<ApiResponse<CrewSummary>>(`/crews/${crewId}/join`)
+    return res.data.data
+  },
+
+  leave: async (crewId: number): Promise<void> => {
+    await axiosInstance.delete(`/crews/${crewId}/members/me`)
+  },
+
+  kick: async (crewId: number, userId: number): Promise<void> => {
+    await axiosInstance.delete(`/crews/${crewId}/members/${userId}`)
+  },
+
+  activity: async (crewId: number): Promise<CrewActivity> => {
+    const res = await axiosInstance.get<ApiResponse<CrewActivity>>(`/crews/${crewId}/activity`)
+    return res.data.data
+  },
+}
+
+export const crewKeys = {
+  all: ['crews'] as const,
+  lists: () => [...crewKeys.all, 'list'] as const,
+  mine: () => [...crewKeys.lists(), 'mine'] as const,
+  detail: (id: number) => [...crewKeys.all, 'detail', id] as const,
+  activity: (id: number) => [...crewKeys.all, 'activity', id] as const,
+  search: (q: string) => [...crewKeys.all, 'search', q] as const,
+}
+
+export const roleLabel = (role: CrewRole | null): string => {
+  if (role === 'OWNER') return '리더'
+  if (role === 'MEMBER') return '멤버'
+  return ''
+}
+
 // Export as 'api' to maintain backward compatibility with existing imports,
 // ensuring we don't conflict with the 'api' import from axios.
 export { sessionsApi as api };

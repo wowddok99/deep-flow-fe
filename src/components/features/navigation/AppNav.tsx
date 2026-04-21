@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { href: '/app', icon: Timer, label: '타이머' },
   { href: '/app/sessions', icon: ScrollText, label: '세션' },
   { href: '/app/stats', icon: BarChart3, label: '통계' },
-  { href: '/app/groups', icon: Users, label: '그룹' },
+  { href: '/app/crews', icon: Users, label: '크루' },
 ]
 
 function useIsActive(href: string) {
