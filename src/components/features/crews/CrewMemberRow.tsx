@@ -16,7 +16,7 @@ import { Button, buttonVariants } from '@/components/ui/button'
 import { UserX } from 'lucide-react'
 import type { CrewMemberInfo } from '@/lib/api'
 import { useKickMember } from '@/hooks/useCrewMutations'
-import { getApiErrorMessage } from '@/lib/axios'
+import { crewToastMessage } from './crewErrorMessage'
 
 interface Props {
   member: CrewMemberInfo
@@ -44,7 +44,7 @@ export function CrewMemberRow({ member, crewId, canKick }: Props) {
       await kick.mutateAsync(member.userId)
       toast.success(`${member.name} 님을 추방했어요`)
     } catch (err) {
-      toast.error(getApiErrorMessage(err, '추방에 실패했습니다'))
+      toast.error(crewToastMessage(err, '추방에 실패했습니다'))
     }
   }
 

@@ -7,8 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { LogIn } from 'lucide-react'
 import { useJoinByCode } from '@/hooks/useCrewMutations'
-import { getApiErrorCode, getApiErrorMessage } from '@/lib/axios'
-import { crewErrorMessage } from './crewErrorMessage'
+import { crewToastMessage } from './crewErrorMessage'
 
 export function JoinByCodeForm() {
   const router = useRouter()
@@ -27,8 +26,7 @@ export function JoinByCodeForm() {
       setCode('')
       router.push(`/app/crews/${crew.id}`)
     } catch (err) {
-      const msg = crewErrorMessage(getApiErrorCode(err)) ?? getApiErrorMessage(err, '참여에 실패했습니다')
-      toast.error(msg)
+      toast.error(crewToastMessage(err, '참여에 실패했습니다'))
     }
   }
 

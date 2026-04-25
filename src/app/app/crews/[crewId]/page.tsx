@@ -12,6 +12,7 @@ import {
 import { useCrewDetail } from '@/hooks/useCrews'
 import { getApiErrorCode } from '@/lib/axios'
 import { crewErrorMessage } from '@/components/features/crews'
+// crewErrorMessage 는 에러 화면(toast 아님) 에서 직접 코드를 표시하므로 헬퍼 대신 그대로 사용
 
 export default function CrewDetailPage() {
   const params = useParams<{ crewId: string }>()

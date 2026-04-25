@@ -1,3 +1,5 @@
+import { getApiErrorCode, getApiErrorMessage } from '@/lib/axios'
+
 const MAP: Record<string, string> = {
   INVALID_INVITE_CODE: '유효하지 않거나 만료된 코드예요',
   CREW_MEMBER_LIMIT_EXCEEDED: '크루 인원이 가득 찼어요',
@@ -14,4 +16,9 @@ const MAP: Record<string, string> = {
 export function crewErrorMessage(code: string | null): string | null {
   if (!code) return null
   return MAP[code] ?? null
+}
+
+/** crew 도메인 에러용 toast 메시지 헬퍼 — 에러 코드 매핑 → 백엔드 메시지 → fallback 순으로 반환 */
+export function crewToastMessage(err: unknown, fallback: string): string {
+  return crewErrorMessage(getApiErrorCode(err)) ?? getApiErrorMessage(err, fallback)
 }

@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Copy, RotateCw } from 'lucide-react'
 import type { CrewDetail, InviteTtl } from '@/lib/api'
 import { useIssueInviteCode } from '@/hooks/useCrewMutations'
-import { getApiErrorMessage } from '@/lib/axios'
+import { crewToastMessage } from './crewErrorMessage'
 
 interface Props {
   crew: CrewDetail
@@ -41,6 +41,13 @@ function formatCountdown(secondsLeft: number): string {
 export function InviteCodeDialog({ crew, open, onOpenChange }: Props) {
   const issue = useIssueInviteCode(crew.id)
   const [now, setNow] = React.useState(() => Date.now())
+  const [lastTtl, setLastTtl] = React.useState<InviteTtl>(30)
+
+  // 카운트다운 보정용: 응답 수신 시각을 기준으로 잔여 초를 계산해 클라이언트 시계 어긋남 영향을 제거.
+  const fetchedAtRef = React.useRef<number>(Date.now())
+  React.useEffect(() => {
+    if (crew.inviteCode) fetchedAtRef.current = Date.now()
+  }, [crew.inviteCode])
 
   React.useEffect(() => {
     if (!open) return
@@ -48,16 +55,22 @@ export function InviteCodeDialog({ crew, open, onOpenChange }: Props) {
     return () => clearInterval(t)
   }, [open])
 
-  const expiresAtMs = crew.inviteCodeExpiresAt ? new Date(crew.inviteCodeExpiresAt).getTime() : 0
-  const secondsLeft = Math.max(0, Math.floor((expiresAtMs - now) / 1000))
+  const totalSecondsAtFetch = crew.inviteCodeExpiresAt
+    ? Math.floor(
+        (new Date(crew.inviteCodeExpiresAt).getTime() - fetchedAtRef.current) / 1000
+      )
+    : 0
+  const elapsed = Math.floor((now - fetchedAtRef.current) / 1000)
+  const secondsLeft = Math.max(0, totalSecondsAtFetch - elapsed)
   const isValid = Boolean(crew.inviteCode && secondsLeft > 0)
 
   const handleIssue = async (ttl: InviteTtl) => {
+    setLastTtl(ttl)
     try {
       await issue.mutateAsync(ttl)
       toast.success('초대 코드를 발급했어요')
     } catch (err) {
-      toast.error(getApiErrorMessage(err, '코드 발급에 실패했습니다'))
+      toast.error(crewToastMessage(err, '코드 발급에 실패했습니다'))
     }
   }
 
@@ -115,7 +128,7 @@ export function InviteCodeDialog({ crew, open, onOpenChange }: Props) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleIssue(30)}
+                  onClick={() => handleIssue(lastTtl)}
                   disabled={issue.isPending}
                   className="gap-1.5 cursor-pointer"
                 >

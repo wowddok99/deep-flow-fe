@@ -8,10 +8,9 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Search } from 'lucide-react'
 import { CrewCard } from '@/components/features/crews'
-import { crewErrorMessage } from '@/components/features/crews'
+import { crewToastMessage } from '@/components/features/crews'
 import { useCrewSearch } from '@/hooks/useCrews'
 import { useJoinPublic } from '@/hooks/useCrewMutations'
-import { getApiErrorCode, getApiErrorMessage } from '@/lib/axios'
 import type { CrewSummary } from '@/lib/api'
 
 function useDebounced<T>(value: T, delay = 300): T {
@@ -43,8 +42,7 @@ export default function CrewSearchPage() {
       toast.success(`${crew.name} 에 참여했어요`)
       router.push(`/app/crews/${crew.id}`)
     } catch (err) {
-      const msg = crewErrorMessage(getApiErrorCode(err)) ?? getApiErrorMessage(err, '참여에 실패했습니다')
-      toast.error(msg)
+      toast.error(crewToastMessage(err, '참여에 실패했습니다'))
     }
   }
 

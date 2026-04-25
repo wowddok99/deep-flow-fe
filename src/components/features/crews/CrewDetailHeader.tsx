@@ -18,8 +18,7 @@ import {
 import { Settings, LogOut, Users, Send } from 'lucide-react'
 import type { CrewDetail } from '@/lib/api'
 import { useLeaveCrew, useDisbandCrew } from '@/hooks/useCrewMutations'
-import { getApiErrorCode, getApiErrorMessage } from '@/lib/axios'
-import { crewErrorMessage } from './crewErrorMessage'
+import { crewToastMessage } from './crewErrorMessage'
 import { InviteCodeDialog } from './InviteCodeDialog'
 import { CrewSettingsDialog } from './CrewSettingsDialog'
 
@@ -43,8 +42,7 @@ export function CrewDetailHeader({ crew }: Props) {
       toast.success('크루에서 나왔어요')
       router.push('/app/crews')
     } catch (err) {
-      const msg = crewErrorMessage(getApiErrorCode(err)) ?? getApiErrorMessage(err, '나가기에 실패했습니다')
-      toast.error(msg)
+      toast.error(crewToastMessage(err, '나가기에 실패했습니다'))
     }
   }
 
@@ -54,7 +52,7 @@ export function CrewDetailHeader({ crew }: Props) {
       toast.success('크루를 해체했어요')
       router.push('/app/crews')
     } catch (err) {
-      toast.error(getApiErrorMessage(err, '해체에 실패했습니다'))
+      toast.error(crewToastMessage(err, '해체에 실패했습니다'))
     }
   }
 

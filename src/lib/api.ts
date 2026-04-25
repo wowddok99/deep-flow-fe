@@ -273,10 +273,11 @@ export interface CreateCrewRequest {
 }
 
 export interface UpdateCrewRequest {
-  name?: string
-  description?: string
-  visibility?: CrewVisibility
-  maxMembers?: number | null
+  // PUT 시맨틱: 모든 필드를 명시적으로 보낸다. description/maxMembers 의 null = 명시적 비움/무제한.
+  name: string
+  description: string | null
+  visibility: CrewVisibility
+  maxMembers: number | null
 }
 
 export const crewsApi = {
