@@ -6,7 +6,7 @@ import { toast } from 'sonner'
 import { Pencil, Trash2, MessageSquare, Loader2 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { commentApi, commentKeys, type CommentNode as CommentNodeData } from '@/lib/api'
+import { commentApi, commentKeys, type CommentMentionUser, type CommentNode as CommentNodeData } from '@/lib/api'
 import { getApiErrorMessage } from '@/lib/axios'
 import { useAuthStore } from '@/store/useAuthStore'
 import { CommentInput } from './CommentInput'
@@ -127,7 +127,9 @@ export function CommentNodeView({
           </div>
         </div>
       ) : (
-        <p className="text-sm whitespace-pre-wrap break-words">{node.content}</p>
+        <p className="text-sm whitespace-pre-wrap break-words">
+          {renderContentWithMentions(node.content, node.mentions)}
+        </p>
       )}
 
       {/* 답글 트리거 (top-level 만) */}
@@ -173,6 +175,44 @@ export function CommentNodeView({
       )}
     </div>
   )
+}
+
+// 댓글 본문에서 '@username' 토큰을 chip 스타일로 강조.
+// 응답에 동봉된 mentions 의 username 과 일치하는 토큰만 강조하고,
+// 일치하지 않는 '@xxx' 는 일반 텍스트로 둔다 (잘못된 입력/외부 표기 보호).
+const MENTION_TOKEN = /@([A-Za-z0-9._-]+)/g
+
+function renderContentWithMentions(
+  content: string,
+  mentions: CommentMentionUser[] | undefined
+): React.ReactNode {
+  if (!content) return null
+  if (!mentions || mentions.length === 0) return content
+
+  const usernameSet = new Set(mentions.map((m) => m.username.toLowerCase()))
+  const out: React.ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+  let key = 0
+  MENTION_TOKEN.lastIndex = 0
+  while ((match = MENTION_TOKEN.exec(content)) !== null) {
+    const start = match.index
+    const end = start + match[0].length
+    const username = match[1]
+    if (!usernameSet.has(username.toLowerCase())) continue
+    if (start > lastIndex) out.push(content.slice(lastIndex, start))
+    out.push(
+      <span
+        key={`m-${key++}`}
+        className="rounded bg-primary/10 text-primary px-1 font-medium"
+      >
+        @{username}
+      </span>
+    )
+    lastIndex = end
+  }
+  if (lastIndex < content.length) out.push(content.slice(lastIndex))
+  return out
 }
 
 function relativeTime(iso: string): string {

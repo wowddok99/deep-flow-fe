@@ -118,6 +118,9 @@ export function CommentInput({
         id: tmpId,
         user: { id: myId, name: '나' },
         content: content.trim(),
+        // 낙관적 단계에서는 mentions 를 비워둔다. onSettled invalidate 후 list 재조회로
+        // 서버가 매핑한 정확한 멘션이 들어와 chip 강조가 켜진다.
+        mentions: [],
         edited: false,
         deleted: false,
         createdAt: new Date().toISOString(),

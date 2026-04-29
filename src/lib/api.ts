@@ -568,10 +568,19 @@ export const highlightKeys = {
 
 export interface Author { id: number; name: string }
 
+// 댓글 본문에서 chip 스타일로 강조할 실제 멘션 사용자.
+// content 의 '@username' 패턴 중 mentions 의 username 과 일치하는 것만 강조한다.
+export interface CommentMentionUser {
+  userId: number
+  username: string
+  name: string
+}
+
 export interface CommentNode {
   id: number
   user: Author
   content: string
+  mentions: CommentMentionUser[]
   edited: boolean
   deleted: boolean
   createdAt: string
