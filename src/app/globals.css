@@ -284,3 +284,35 @@
 .image-delete-button:hover {
   background: hsl(0 70% 50%);
 }
+
+/* Tiptap placeholder — 빈 첫 단락에 안내 문구 표시.
+   .ProseMirror 는 ProseMirror 가 모든 에디터 뷰에 자동 부여하는 클래스라 안전. */
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(var(--muted-foreground) / 0.7);
+  pointer-events: none;
+  height: 0;
+}
+
+/* mention chip — 입력칸(Tiptap node) 과 게시 댓글(span) 양쪽에서 동일하게 사용.
+   다크모드는 --primary 가 흰색에 가까워 0.1 배경이 거의 안 보이므로
+   투명도를 올리고 옅은 outline 도 함께 적용해 chip 윤곽을 또렷하게 한다. */
+.mention-chip,
+.ProseMirror .mention {
+  display: inline-block;
+  vertical-align: baseline;
+  background-color: hsl(var(--primary) / 0.1);
+  color: hsl(var(--primary));
+  padding: 0 0.25rem;
+  border-radius: 0.25rem;
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.375;
+}
+
+.dark .mention-chip,
+.dark .ProseMirror .mention {
+  background-color: hsl(var(--primary) / 0.2);
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3) inset;
+}

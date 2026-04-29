@@ -202,10 +202,7 @@ function renderContentWithMentions(
     if (!usernameSet.has(username.toLowerCase())) continue
     if (start > lastIndex) out.push(content.slice(lastIndex, start))
     out.push(
-      <span
-        key={`m-${key++}`}
-        className="rounded bg-primary/10 text-primary px-1 font-medium"
-      >
+      <span key={`m-${key++}`} className="mention-chip">
         @{username}
       </span>
     )

@@ -10,7 +10,8 @@ interface MentionAutocompleteProps {
   query: string                                  // '@' 다음 입력 prefix (정규화된 형태)
   onSelect: (member: MemberSuggestion) => void
   open: boolean
-  anchorRef: React.RefObject<HTMLTextAreaElement | null>
+  // textarea 또는 Tiptap contentEditable 등 keydown 을 받을 수 있는 요소
+  anchorRef: React.RefObject<HTMLElement | null>
 }
 
 /**
@@ -45,11 +46,23 @@ export function MentionAutocomplete({ crewId, query, onSelect, open, anchorRef }
         setHi((h) => (h - 1 + items.length) % items.length)
       } else if (e.key === 'Enter' || e.key === 'Tab') {
         e.preventDefault()
-        onSelect(items[hi])
+        // 한글 IME 조합 중인 Enter 는 IME commit 신호로 먼저 동작하므로
+        // 이 시점의 doc 은 아직 조합문자(예: '최') 미반영 상태.
+        // compositionend 까지 기다려 doc 이 안정된 후 선택을 적용하면
+        // command 의 range.to 가 정확해 chip 뒤 잔재 텍스트가 남지 않는다.
+        if (e.isComposing) {
+          const target = items[hi]
+          const onceCompositionEnd = () => onSelect(target)
+          el.addEventListener('compositionend', onceCompositionEnd, { once: true })
+        } else {
+          onSelect(items[hi])
+        }
       }
     }
-    el.addEventListener('keydown', handler)
-    return () => el.removeEventListener('keydown', handler)
+    // capture phase 로 부착해 contentEditable 의 ProseMirror 내부 핸들러보다 먼저 실행되도록 보장.
+    // textarea 케이스에서도 동일하게 동작하므로 기존 호환 유지.
+    el.addEventListener('keydown', handler, true)
+    return () => el.removeEventListener('keydown', handler, true)
   }, [open, items, hi, anchorRef, onSelect])
 
   if (!open) return null
@@ -64,7 +77,13 @@ export function MentionAutocomplete({ crewId, query, onSelect, open, anchorRef }
             <li key={m.userId}>
               <button
                 type="button"
-                onClick={() => onSelect(m)}
+                // onClick 대신 onMouseDown + preventDefault: 에디터의 포커스/IME 상태가
+                // 클릭 직전에 흐트러지지 않도록 해, 한글 조합 commit 후 command 가
+                // 안정된 doc 상태로 실행되게 한다.
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  onSelect(m)
+                }}
                 onMouseEnter={() => setHi(i)}
                 className={cn(
                   'w-full text-left px-3 py-1.5 text-sm cursor-pointer transition-colors',
