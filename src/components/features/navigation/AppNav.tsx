@@ -11,6 +11,7 @@ import { DisplayAchievement } from '@/components/features/achievement/DisplayAch
 import { ModeToggle } from '@/components/mode-toggle'
 import { cn } from '@/lib/utils'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { NotificationPopover } from '@/components/features/notifications/NotificationPopover'
 
 const NAV_ITEMS = [
   { href: '/app', icon: Timer, label: '타이머' },
@@ -135,6 +136,9 @@ export function AppNav() {
               </TooltipTrigger>
               <TooltipContent side={effectiveCollapsed ? 'right' : 'top'}>테마 변경</TooltipContent>
             </Tooltip>
+
+            <NotificationPopover collapsed={effectiveCollapsed} />
+
             <Tooltip delayDuration={0}>
               <TooltipTrigger asChild>
                 <button
