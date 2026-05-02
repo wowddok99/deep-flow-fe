@@ -19,7 +19,10 @@ export function CommentThread({ sessionId, crewId, highlightCommentId }: Comment
     queryFn: () => commentApi.list(sessionId),
   })
 
-  const totalCount = comments.length + comments.reduce((acc, c) => acc + c.replies.length, 0)
+  const totalCount = comments.reduce(
+    (acc, c) => acc + (c.deleted ? 0 : 1) + c.replies.length,
+    0
+  )
 
   return (
     <div className="space-y-4">

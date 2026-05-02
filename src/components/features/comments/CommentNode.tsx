@@ -122,7 +122,7 @@ export function CommentNodeView({
 
       {/* 본문 */}
       {node.deleted ? (
-        <p className="text-sm text-muted-foreground">삭제된 댓글입니다</p>
+        <p className="text-xs text-muted-foreground/60 italic">삭제된 댓글</p>
       ) : editing ? (
         <div className="space-y-1.5">
           <Textarea
