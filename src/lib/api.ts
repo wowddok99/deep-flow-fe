@@ -32,7 +32,7 @@ export interface SearchPage<T> {
 }
 
 // ============================================================
-// Sessions (기존)
+// Sessions
 // ============================================================
 
 export interface FocusSession {
@@ -65,7 +65,6 @@ export interface SessionDetail extends SessionSummary {
   content: object | null;
   aiSummary: string | null;
   imageUrls: string[];
-  // 10-2 보강: 공유 상태
   sharedCrewId: number | null;
   sharedAt: string | null;
 }
@@ -117,7 +116,7 @@ export const imagesApi = {
 };
 
 // ============================================================
-// Achievements (기존)
+// Achievements
 // ============================================================
 
 export type AchievementCategory =
@@ -159,7 +158,7 @@ export const achievementsApi = {
 }
 
 // ============================================================
-// Stats (기존)
+// Stats
 // ============================================================
 
 export interface DashboardOverview {
@@ -238,7 +237,7 @@ export const statsApi = {
 }
 
 // ============================================================
-// Crew (기존)
+// Crew
 // ============================================================
 
 export type CrewVisibility = 'PUBLIC' | 'PRIVATE'
@@ -373,7 +372,7 @@ export const roleLabel = (role: CrewRole | null): string => {
 }
 
 // ============================================================
-// 공유 세션 (P1)
+// 공유 세션
 // ============================================================
 
 export interface UserBrief { id: number; name: string }
@@ -397,7 +396,7 @@ export interface CrewFeedItem {
   tags: string[]
   reactionCount: number
   commentCount: number
-  edited: boolean   // 10-4 보강
+  edited: boolean
 }
 
 // 단건 상세 응답 — 크루 멤버이면 본문(Tiptap content) 까지 노출.
@@ -449,7 +448,7 @@ export const feedKeys = {
 }
 
 // ============================================================
-// 태그 (P1)
+// 태그
 // ============================================================
 
 export interface TagSuggestion { tag: string; count: number }
@@ -482,7 +481,7 @@ export const tagKeys = {
 }
 
 // ============================================================
-// 라이브 프레즌스 (P1)
+// 라이브 프레즌스
 // ============================================================
 
 export interface ActiveMember {
@@ -504,12 +503,8 @@ export const presenceKeys = {
 }
 
 // ============================================================
-// 리액션 (P2)
+// 리액션
 // ============================================================
-
-// IDEA 결정 7번 - 고정 5종
-export const REACTION_EMOJIS = ['👍', '🔥', '☕', '💡', '🎯'] as const
-export type ReactionEmoji = typeof REACTION_EMOJIS[number]
 
 export interface ReactionToggleResponse {
   emoji: string
@@ -518,10 +513,16 @@ export interface ReactionToggleResponse {
   userReacted: boolean
 }
 
+export interface Reactor {
+  userId: number
+  name: string
+}
+
 export interface EmojiCount {
   emoji: string
   count: number
   userReacted: boolean
+  topReactors: Reactor[]
 }
 
 export interface ReactionAggregate { items: EmojiCount[] }
@@ -542,7 +543,7 @@ export const reactionKeys = {
 }
 
 // ============================================================
-// 적응형 하이라이트 (P2)
+// 적응형 하이라이트
 // ============================================================
 
 export type HighlightMode = 'EMPTY' | 'GROWING' | 'MATURE'
@@ -578,7 +579,7 @@ export const highlightKeys = {
 }
 
 // ============================================================
-// 댓글 (P3)
+// 댓글
 // ============================================================
 
 export interface Author { id: number; name: string }
@@ -633,13 +634,12 @@ export const commentKeys = {
 }
 
 // ============================================================
-// 알림 (P3, 10-1 보강)
+// 알림
 // ============================================================
 
 export interface NotificationItem {
   id: number
   commentId: number
-  // 10-1 보강: deep link 4 필드
   sessionId: number | null
   crewId: number | null
   actorName: string | null
@@ -669,7 +669,7 @@ export const notificationKeys = {
 }
 
 // ============================================================
-// 검색 (P4 — type=session|tag, P5 도 동일 엔드포인트)
+// 검색
 // ============================================================
 
 export type SearchType = 'session' | 'tag'
@@ -698,7 +698,7 @@ export const searchKeys = {
 }
 
 // ============================================================
-// 멘션 자동완성 (P6)
+// 멘션 자동완성
 // ============================================================
 
 export interface MemberSuggestion {
