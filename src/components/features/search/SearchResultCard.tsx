@@ -33,7 +33,7 @@ export function SearchResultCard({ result, query, crewId }: SearchResultCardProp
           {result.tags.slice(0, 3).map((t) => (
             <span
               key={t}
-              className="rounded-full bg-secondary/60 text-secondary-foreground text-[10px] px-1.5 py-px"
+              className="rounded-md bg-muted/50 text-muted-foreground text-[10px] px-2 py-0.5"
             >
               #{t}
             </span>

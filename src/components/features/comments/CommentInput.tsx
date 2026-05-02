@@ -54,6 +54,10 @@ export function CommentInput({
   // MentionAutocomplete 의 키보드 핸들러를 부착할 anchor — Tiptap 의 contentEditable DOM.
   const editorAnchorRef = React.useRef<HTMLElement | null>(null)
 
+  // Tiptap v3 의 useEditor 는 shouldRerenderOnTransaction 기본값이 false 라 editor.isEmpty
+  // 같은 파생값을 직접 읽으면 stale 함. onUpdate 로 React state 에 미러링해 등록 버튼 활성화에 사용.
+  const [isEmpty, setIsEmpty] = React.useState(true)
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -127,6 +131,9 @@ export function CommentInput({
     ],
     autofocus: autoFocus,
     immediatelyRender: false,
+    onUpdate: ({ editor }) => {
+      setIsEmpty(editor.isEmpty)
+    },
     editorProps: {
       attributes: {
         // ProseMirror 가 자동으로 .ProseMirror 클래스를 부여 — globals.css 의 placeholder/mention 규칙이 매칭됨.
@@ -201,6 +208,7 @@ export function CommentInput({
     },
     onSuccess: () => {
       editor?.commands.clearContent()
+      setIsEmpty(true)
       setSuggestion({ open: false, query: '', command: null })
       onSubmitted?.()
     },
@@ -209,7 +217,6 @@ export function CommentInput({
     },
   })
 
-  const isEmpty = editor?.isEmpty ?? true
   const canSubmit = !isEmpty && !createMutation.isPending
 
   return (

@@ -63,20 +63,28 @@ export function LivePresenceStrip({ crewId }: LivePresenceStripProps) {
 function PulseAvatar({ member, index }: { member: ActiveMember; index: number }) {
   const initial = member.name.slice(0, 1).toUpperCase()
   return (
-    <motion.div
-      initial={{ scale: 1 }}
-      animate={{ scale: [1, 1.06, 1] }}
-      transition={{
-        duration: 1.4,
-        repeat: Infinity,
-        ease: 'easeInOut',
-        delay: index * 0.18,
-      }}
+    <div
       title={`${member.name} · ${minutesSince(member.sessionStartedAt)}째`}
-      className="relative h-7 w-7 rounded-full bg-secondary ring-2 ring-green-400/60 ring-offset-1 ring-offset-card flex items-center justify-center text-xs font-semibold cursor-default"
+      className="relative h-7 w-7 cursor-default"
     >
-      {initial}
-    </motion.div>
+      {/* 펄스는 외곽 ring 레이어만 — 아바타 자체를 transform 하면 Windows 에서 텍스트가 떨림. */}
+      <motion.span
+        aria-hidden
+        className="absolute inset-0 rounded-full ring-2 ring-green-400"
+        initial={{ scale: 1, opacity: 0.6 }}
+        animate={{ scale: [1, 1.25, 1], opacity: [0.6, 0, 0.6] }}
+        transition={{
+          duration: 1.6,
+          repeat: Infinity,
+          ease: 'easeOut',
+          delay: index * 0.2,
+        }}
+      />
+      {/* 실제 아바타 — 정적이라 글자 안 흔들림. */}
+      <div className="relative h-7 w-7 rounded-full bg-secondary ring-2 ring-green-400/60 ring-offset-1 ring-offset-card flex items-center justify-center text-xs font-semibold">
+        {initial}
+      </div>
+    </div>
   )
 }
 

@@ -43,29 +43,16 @@ export function CrewFeedList({ crewId }: CrewFeedListProps) {
 
   return (
     <div className="space-y-3">
-      {/* 태그 필터 칩 */}
+      {/* 태그 필터 — rounded-md 작은 칩 */}
       {popularTags.length > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap">
-          <button
-            onClick={() => setTag(null)}
-            className={cn(
-              'rounded-full px-2.5 py-0.5 text-xs cursor-pointer transition-colors',
-              tag === null ? 'bg-foreground text-background' : 'bg-secondary/60 hover:bg-secondary text-secondary-foreground'
-            )}
-          >
+          <FilterChip selected={tag === null} onClick={() => setTag(null)}>
             전체
-          </button>
+          </FilterChip>
           {popularTags.map((t) => (
-            <button
-              key={t.tag}
-              onClick={() => setTag(t.tag)}
-              className={cn(
-                'rounded-full px-2.5 py-0.5 text-xs cursor-pointer transition-colors',
-                tag === t.tag ? 'bg-foreground text-background' : 'bg-secondary/60 hover:bg-secondary text-secondary-foreground'
-              )}
-            >
+            <FilterChip key={t.tag} selected={tag === t.tag} onClick={() => setTag(t.tag)}>
               #{t.tag}
-            </button>
+            </FilterChip>
           ))}
         </div>
       )}
@@ -99,5 +86,27 @@ export function CrewFeedList({ crewId }: CrewFeedListProps) {
         </div>
       )}
     </div>
+  )
+}
+
+interface FilterChipProps {
+  selected: boolean
+  onClick: () => void
+  children: React.ReactNode
+}
+
+function FilterChip({ selected, onClick, children }: FilterChipProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'rounded-md px-2.5 py-1 text-xs font-medium cursor-pointer transition-colors',
+        selected
+          ? 'bg-foreground text-background'
+          : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+      )}
+    >
+      {children}
+    </button>
   )
 }

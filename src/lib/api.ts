@@ -400,6 +400,21 @@ export interface CrewFeedItem {
   edited: boolean   // 10-4 보강
 }
 
+// 단건 상세 응답 — 크루 멤버이면 본문(Tiptap content) 까지 노출.
+// content 는 BE 가 JsonNode 로 직렬화 — Tiptap setContent 에 그대로 넘길 수 있음.
+export interface CrewSessionDetail {
+  sessionId: number
+  user: UserBrief
+  title: string | null
+  content: object | null
+  durationSeconds: number
+  sharedAt: string
+  tags: string[]
+  reactionCount: number
+  commentCount: number
+  edited: boolean
+}
+
 export const shareApi = {
   share: async (sessionId: number, payload: ShareSessionRequest): Promise<SharedSessionResponse> => {
     const res = await axiosInstance.post<ApiResponse<SharedSessionResponse>>(`/sessions/${sessionId}/share`, payload)
@@ -421,8 +436,8 @@ export const feedApi = {
     })
     return res.data.data
   },
-  detail: async (crewId: number, sessionId: number): Promise<CrewFeedItem> => {
-    const res = await axiosInstance.get<ApiResponse<CrewFeedItem>>(`/crews/${crewId}/sessions/${sessionId}`)
+  detail: async (crewId: number, sessionId: number): Promise<CrewSessionDetail> => {
+    const res = await axiosInstance.get<ApiResponse<CrewSessionDetail>>(`/crews/${crewId}/sessions/${sessionId}`)
     return res.data.data
   },
 }

@@ -85,7 +85,7 @@ export default function CrewSearchPage() {
           />
         </div>
 
-        {/* type 토글 — 댓글 검색은 P4/P5 미지원이라 표시 안 함 */}
+        {/* type 토글 */}
         <div className="flex gap-1.5">
           {(['session', 'tag'] as const).map((t) => (
             <Button
@@ -98,12 +98,6 @@ export default function CrewSearchPage() {
               {t === 'session' ? '세션' : '태그'}
             </Button>
           ))}
-          <span
-            className="text-xs h-7 px-2 inline-flex items-center text-muted-foreground/60 italic"
-            title="댓글 검색은 추후 지원 예정"
-          >
-            댓글 (준비 중)
-          </span>
         </div>
 
         {tooShort && (

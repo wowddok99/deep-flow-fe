@@ -111,7 +111,7 @@ export function TagInput({
         {value.map((t) => (
           <span
             key={t}
-            className="inline-flex items-center gap-1 rounded-full bg-secondary text-secondary-foreground px-2 py-0.5 text-xs"
+            className="inline-flex items-center gap-1 rounded-md bg-muted text-foreground px-2 py-0.5 text-xs"
           >
             {t}
             <button
@@ -151,7 +151,7 @@ export function TagInput({
                   onClick={() => addTag(s.tag)}
                   disabled={isFull || value.includes(s.tag)}
                   className={cn(
-                    'rounded-full bg-secondary/60 hover:bg-secondary text-secondary-foreground px-2 py-0.5 text-xs cursor-pointer',
+                    'rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground px-2 py-0.5 text-xs cursor-pointer transition-colors',
                     value.includes(s.tag) && 'opacity-40 cursor-not-allowed',
                   )}
                 >
@@ -173,9 +173,8 @@ export function TagInput({
       ) : (
         <div className="mt-2 space-y-1.5 text-[11px]">
           {recentTags.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-muted-foreground">⏱ 최근 사용</span>
-              <span className="text-muted-foreground/40">·</span>
+            <div className="space-y-1">
+              <p className="text-muted-foreground">⏱ 최근 사용</p>
               <div className="flex flex-wrap gap-1">
                 {recentTags.map((t) => (
                   <button
@@ -184,7 +183,7 @@ export function TagInput({
                     onClick={() => addTag(t)}
                     disabled={isFull || value.includes(t)}
                     className={cn(
-                      'rounded-full bg-secondary/60 hover:bg-secondary px-1.5 py-px cursor-pointer',
+                      'rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground px-2 py-0.5 cursor-pointer transition-colors',
                       value.includes(t) && 'opacity-40 cursor-not-allowed',
                     )}
                   >
@@ -195,9 +194,8 @@ export function TagInput({
             </div>
           )}
           {popularTags.length > 0 && (
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-muted-foreground">🔥 우리 크루 인기</span>
-              <span className="text-muted-foreground/40">·</span>
+            <div className="space-y-1">
+              <p className="text-muted-foreground">🔥 우리 크루 인기</p>
               <div className="flex flex-wrap gap-1">
                 {popularTags.map((p) => (
                   <button
@@ -206,7 +204,7 @@ export function TagInput({
                     onClick={() => addTag(p.tag)}
                     disabled={isFull || value.includes(p.tag)}
                     className={cn(
-                      'rounded-full bg-secondary/60 hover:bg-secondary px-1.5 py-px cursor-pointer',
+                      'rounded-md bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground px-2 py-0.5 cursor-pointer transition-colors',
                       value.includes(p.tag) && 'opacity-40 cursor-not-allowed',
                     )}
                   >

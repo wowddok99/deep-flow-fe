@@ -218,7 +218,7 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
                 {isLoading ? "Loading..." : moment(session?.startTime)}
               </SheetTitle>
               {session?.sharedCrewId != null && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-secondary text-secondary-foreground px-1.5 py-0.5 text-[10px]">
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 text-muted-foreground px-2 py-0.5 text-[10px]">
                   <Link2 className="h-2.5 w-2.5" /> 공유 중
                 </span>
               )}

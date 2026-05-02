@@ -63,13 +63,13 @@ export function ReactionBar({ sessionId }: ReactionBarProps) {
             onClick={() => toggleMutation.mutate(emoji)}
             disabled={isLoading}
             className={cn(
-              'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm transition-colors cursor-pointer border',
+              'inline-flex items-center justify-center gap-1 rounded-md px-2.5 py-1 text-sm transition-colors cursor-pointer border min-w-[3.25rem]',
               reacted
-                ? 'bg-foreground/10 border-foreground/20 text-foreground'
-                : 'bg-secondary/40 border-transparent hover:bg-secondary text-muted-foreground'
+                ? 'bg-foreground/10 border-foreground/25 text-foreground'
+                : 'bg-muted/50 border-transparent hover:bg-muted text-muted-foreground hover:text-foreground'
             )}
           >
-            <span>{emoji}</span>
+            <span className="leading-none">{emoji}</span>
             <span className="text-xs tabular-nums">{count}</span>
           </button>
         )

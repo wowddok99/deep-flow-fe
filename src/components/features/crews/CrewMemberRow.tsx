@@ -58,7 +58,7 @@ export function CrewMemberRow({ member, crewId, canKick }: Props) {
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-medium truncate">{member.name}</span>
           {member.role === 'OWNER' && (
-            <span className="text-[9px] font-medium bg-primary/10 text-primary rounded-full px-1.5 py-0.5">
+            <span className="text-[10px] font-medium bg-muted/60 text-muted-foreground rounded-md px-2 py-0.5">
               리더
             </span>
           )}

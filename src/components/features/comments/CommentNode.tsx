@@ -5,7 +5,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Pencil, Trash2, MessageSquare, Loader2 } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
-import { Button } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { commentApi, commentKeys, type CommentMentionUser, type CommentNode as CommentNodeData } from '@/lib/api'
 import { getApiErrorMessage } from '@/lib/axios'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -34,6 +38,7 @@ export function CommentNodeView({
   const [editing, setEditing] = React.useState(false)
   const [editContent, setEditContent] = React.useState(node.content)
   const [replyOpen, setReplyOpen] = React.useState(false)
+  const [deleteOpen, setDeleteOpen] = React.useState(false)
 
   const isHighlighted = highlightCommentId === node.id
   const ref = React.useRef<HTMLDivElement>(null)
@@ -70,12 +75,12 @@ export function CommentNodeView({
         isHighlighted && 'bg-yellow-100 dark:bg-yellow-900/20 px-2 py-1 -mx-2'
       )}
     >
-      <div className="flex items-baseline justify-between gap-2 mb-0.5">
-        <div className="flex items-baseline gap-2">
-          <span className="text-sm font-semibold">{node.user.name}</span>
-          <span className="text-[10px] text-muted-foreground">{relativeTime(node.createdAt)}</span>
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold leading-none">{node.user.name}</span>
+          <span className="text-[11px] text-muted-foreground leading-none">{relativeTime(node.createdAt)}</span>
           {node.edited && !node.deleted && (
-            <span className="text-[10px] text-muted-foreground">(편집됨)</span>
+            <span className="text-[11px] text-muted-foreground leading-none">(편집됨)</span>
           )}
         </div>
         {isMine && !node.deleted && !editing && (
@@ -88,21 +93,36 @@ export function CommentNodeView({
               <Pencil className="h-3 w-3" />
             </button>
             <button
-              onClick={() => {
-                if (confirm('이 댓글을 삭제할까요?')) deleteMutation.mutate()
-              }}
+              onClick={() => setDeleteOpen(true)}
               className="text-muted-foreground hover:text-destructive p-1 cursor-pointer"
               aria-label="삭제"
             >
               <Trash2 className="h-3 w-3" />
             </button>
+            <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>댓글을 삭제할까요?</AlertDialogTitle>
+                  <AlertDialogDescription>삭제된 댓글은 복구할 수 없어요.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>취소</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => deleteMutation.mutate()}
+                    className={buttonVariants({ variant: 'destructive' })}
+                  >
+                    삭제
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         )}
       </div>
 
       {/* 본문 */}
       {node.deleted ? (
-        <p className="text-sm text-muted-foreground italic">삭제된 댓글입니다</p>
+        <p className="text-sm text-muted-foreground">삭제된 댓글입니다</p>
       ) : editing ? (
         <div className="space-y-1.5">
           <Textarea

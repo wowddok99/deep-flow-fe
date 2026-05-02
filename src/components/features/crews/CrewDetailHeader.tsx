@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { Settings, LogOut, Users, Send } from 'lucide-react'
+import { Settings, LogOut, Users, Send, Globe, Lock, Trash2 } from 'lucide-react'
 import type { CrewDetail } from '@/lib/api'
 import { useLeaveCrew, useDisbandCrew } from '@/hooks/useCrewMutations'
 import { crewToastMessage } from './crewErrorMessage'
@@ -30,11 +30,14 @@ export function CrewDetailHeader({ crew }: Props) {
   const router = useRouter()
   const [inviteOpen, setInviteOpen] = React.useState(false)
   const [settingsOpen, setSettingsOpen] = React.useState(false)
+  const [disbandOpen, setDisbandOpen] = React.useState(false)
 
   const leave = useLeaveCrew()
   const disband = useDisbandCrew()
 
   const isOwner = crew.myRole === 'OWNER'
+  const isPublic = crew.visibility === 'PUBLIC'
+  const VisibilityIcon = isPublic ? Globe : Lock
 
   const handleLeave = async () => {
     try {
@@ -62,20 +65,15 @@ export function CrewDetailHeader({ crew }: Props) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-bold truncate">{crew.name}</h1>
-            <span
-              className={`text-[10px] font-medium rounded-full px-2 py-0.5 ${
-                crew.visibility === 'PUBLIC'
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-muted text-muted-foreground'
-              }`}
-            >
-              {crew.visibility === 'PUBLIC' ? '공개' : '비공개'}
+            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+              <VisibilityIcon className="h-3 w-3" />
+              {isPublic ? '공개' : '비공개'}
             </span>
           </div>
           {crew.description && (
             <p className="text-sm text-muted-foreground mt-1.5">{crew.description}</p>
           )}
-          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground tabular-nums">
             <span className="flex items-center gap-1">
               <Users className="h-3 w-3" />
               멤버 {crew.memberCount}/{crew.maxMembers ?? '∞'}
@@ -87,12 +85,12 @@ export function CrewDetailHeader({ crew }: Props) {
           </div>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-1.5 flex-wrap">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setInviteOpen(true)}
-            className="gap-1.5 cursor-pointer"
+            className="gap-1.5 cursor-pointer shadow-none border-border/60 hover:bg-muted/50"
           >
             <Send className="h-3.5 w-3.5" />
             초대하기
@@ -104,17 +102,21 @@ export function CrewDetailHeader({ crew }: Props) {
                 variant="outline"
                 size="sm"
                 onClick={() => setSettingsOpen(true)}
-                className="gap-1.5 cursor-pointer"
+                className="gap-1.5 cursor-pointer shadow-none border-border/60 hover:bg-muted/50"
               >
                 <Settings className="h-3.5 w-3.5" />
                 설정
               </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" size="sm" className="cursor-pointer">
-                    해체
-                  </Button>
-                </AlertDialogTrigger>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDisbandOpen(true)}
+                className="gap-1.5 cursor-pointer shadow-none border-border/60 hover:bg-muted/50"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                해체
+              </Button>
+              <AlertDialog open={disbandOpen} onOpenChange={setDisbandOpen}>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>크루를 해체할까요?</AlertDialogTitle>
@@ -137,7 +139,11 @@ export function CrewDetailHeader({ crew }: Props) {
           ) : (
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-1.5 cursor-pointer">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5 cursor-pointer shadow-none border-border/60 hover:bg-muted/50"
+                >
                   <LogOut className="h-3.5 w-3.5" />
                   나가기
                 </Button>

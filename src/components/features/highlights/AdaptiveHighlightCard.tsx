@@ -58,7 +58,7 @@ function HighlightGrowing({ data, crewId }: { data: CrewHighlight; crewId: numbe
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
       <div className="flex items-center justify-between">
         <p className="text-xs font-semibold text-muted-foreground">우리 크루의 최근 활약</p>
-        <span className="text-[10px] text-muted-foreground">
+        <span className="text-[10px] text-muted-foreground tabular-nums">
           {data.recentSharedCount} / {data.threshold}
         </span>
       </div>
@@ -99,7 +99,10 @@ function HighlightMature({ data, crewId }: { data: CrewHighlight; crewId: number
             href={hot.sessionId ? `/app/crews/${crewId}/sessions/${hot.sessionId}` : '#'}
             className="text-sm hover:underline truncate block"
           >
-            {hot.userName} — {hot.title} <span className="text-orange-500/80 text-xs ml-1">(🔥 {Math.round(hot.score ?? 0)})</span>
+            {hot.title}
+            <span className="inline-flex items-center gap-0.5 ml-2 text-orange-500/80 text-xs align-middle tabular-nums">
+              <Flame className="h-3 w-3" /> {Math.round(hot.score ?? 0)}
+            </span>
           </Link>
         </Row>
       )}
@@ -110,7 +113,10 @@ function HighlightMature({ data, crewId }: { data: CrewHighlight; crewId: number
             href={long.sessionId ? `/app/crews/${crewId}/sessions/${long.sessionId}` : '#'}
             className="text-sm hover:underline truncate block"
           >
-            {long.userName} — {long.title} <span className="text-blue-500/80 text-xs ml-1">({formatDuration(long.durationSeconds ?? 0)})</span>
+            {long.title}
+            <span className="inline-flex items-center gap-0.5 ml-2 text-blue-500/80 text-xs align-middle tabular-nums">
+              <Clock className="h-3 w-3" /> {formatDuration(long.durationSeconds ?? 0)}
+            </span>
           </Link>
         </Row>
       )}
@@ -119,7 +125,7 @@ function HighlightMature({ data, crewId }: { data: CrewHighlight; crewId: number
         <Row icon={<Hash className="h-3.5 w-3.5 text-purple-500" />} label="핫한 태그">
           <div className="flex items-center gap-1.5 flex-wrap">
             {tags.map((t) => (
-              <span key={t.tag} className="rounded-full bg-secondary text-secondary-foreground text-xs px-2 py-0.5">
+              <span key={t.tag} className="rounded-md bg-muted/50 text-muted-foreground text-xs px-2 py-0.5">
                 #{t.tag}
               </span>
             ))}

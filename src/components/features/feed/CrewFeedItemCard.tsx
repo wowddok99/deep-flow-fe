@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { MessageCircle, Clock, Pencil } from 'lucide-react'
+import { MessageCircle, Clock, Pencil, Flame } from 'lucide-react'
 import type { CrewFeedItem } from '@/lib/api'
 import { cn } from '@/lib/utils'
 
@@ -34,8 +34,8 @@ export function CrewFeedItemCard({ item, crewId }: CrewFeedItemCardProps) {
       </div>
 
       {/* 제목 */}
-      <h3 className="text-sm font-semibold mb-1 line-clamp-1">
-        📝 {item.title ?? '(제목 없음)'}
+      <h3 className="text-base font-semibold mb-1 line-clamp-1 text-foreground">
+        {item.title ?? '(제목 없음)'}
       </h3>
 
       {/* 본문 미리보기 */}
@@ -51,18 +51,18 @@ export function CrewFeedItemCard({ item, crewId }: CrewFeedItemCardProps) {
           {item.tags.map((t) => (
             <span
               key={t}
-              className="rounded-full bg-secondary/60 text-secondary-foreground text-[10px] px-1.5 py-px"
+              className="rounded-md bg-muted/50 text-muted-foreground text-[10px] px-2 py-0.5"
             >
               #{t}
             </span>
           ))}
         </div>
-        <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground tabular-nums">
+          <span className="inline-flex items-center gap-0.5">
             <MessageCircle className="h-3 w-3" /> {item.commentCount}
           </span>
-          <span className="inline-flex items-center gap-1">
-            🔥 {item.reactionCount}
+          <span className="inline-flex items-center gap-0.5">
+            <Flame className="h-3 w-3" /> {item.reactionCount}
           </span>
         </div>
       </div>

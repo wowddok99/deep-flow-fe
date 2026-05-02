@@ -11,10 +11,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import {
-  feedApi, feedKeys, shareApi,
-  api as sessionsApi,
-} from '@/lib/api'
+import { feedApi, feedKeys, shareApi } from '@/lib/api'
 import { getApiErrorCode, getApiErrorMessage } from '@/lib/axios'
 import { useAuthStore } from '@/store/useAuthStore'
 import { ReadOnlyContent } from '@/components/features/editor/ReadOnlyContent'
@@ -39,7 +36,7 @@ export default function SharedSessionPage() {
   const sessionId = Number(params.sessionId)
   const highlightCommentId = Number(search.get('commentId')) || null
 
-  // 피드 단건 (헤더 메타용)
+  // 피드 단건 — 크루 멤버이면 본문(content) 포함해서 받음
   const {
     data: feedItem,
     isLoading: feedLoading,
@@ -51,14 +48,7 @@ export default function SharedSessionPage() {
     staleTime: 30 * 1000,
   })
 
-  // 본문 (Tiptap content) — 작성자 본인일 때만 받을 수 있음 (sessions/{id} 는 본인 소유 검사)
   const isAuthor = myId != null && feedItem?.user.id === myId
-  const { data: detail } = useQuery({
-    queryKey: ['session', sessionId],
-    queryFn: () => sessionsApi.sessions.get(sessionId),
-    enabled: isAuthor,
-    staleTime: 30 * 1000,
-  })
 
   const [editSheetOpen, setEditSheetOpen] = React.useState(false)
   const [unshareDialogOpen, setUnshareDialogOpen] = React.useState(false)
@@ -163,7 +153,7 @@ export default function SharedSessionPage() {
               {feedItem.tags.map((t) => (
                 <span
                   key={t}
-                  className="rounded-full bg-secondary/60 text-secondary-foreground text-xs px-2 py-0.5"
+                  className="rounded-md bg-muted/50 text-muted-foreground text-xs px-2 py-0.5"
                 >
                   #{t}
                 </span>
@@ -172,19 +162,10 @@ export default function SharedSessionPage() {
           )}
         </div>
 
-        {/* 본문 */}
+        {/* 본문 — 크루 멤버이면 풀 본문 노출 */}
         <div className="rounded-xl border border-border bg-card py-2">
-          {isAuthor && detail?.content ? (
-            <ReadOnlyContent content={detail.content} />
-          ) : feedItem.summaryPreview ? (
-            <div className="px-4 py-4">
-              <p className="text-sm whitespace-pre-wrap leading-relaxed">{feedItem.summaryPreview}</p>
-              {!isAuthor && (
-                <p className="text-[11px] text-muted-foreground/70 italic mt-2">
-                  요약 미리보기입니다. (본문 전체는 작성자만 볼 수 있어요)
-                </p>
-              )}
-            </div>
+          {feedItem.content ? (
+            <ReadOnlyContent content={feedItem.content} />
           ) : (
             <p className="text-sm text-muted-foreground italic px-4 py-4">본문이 비어있어요</p>
           )}
