@@ -31,13 +31,13 @@ export function JoinByCodeForm() {
   }
 
   return (
-    <div className="flex gap-2 flex-wrap">
+    <div className="flex gap-2 items-center">
       <Input
         placeholder="초대 코드 입력"
         value={code}
         onChange={(e) => setCode(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && submit()}
-        className="min-w-[140px] max-w-[200px] uppercase"
+        className="min-w-[140px] max-w-[220px] uppercase"
       />
       <Button
         variant="outline"

@@ -10,17 +10,12 @@ import {
   CartesianGrid,
 } from 'recharts'
 import { useCrewActivity } from '@/hooks/useCrews'
+import { formatDuration } from '@/lib/formatDuration'
 
 interface Props {
   crewId: number
 }
 
-function formatHourMin(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (h === 0) return `${m}분`
-  return `${h}시간 ${m}분`
-}
 
 function formatMd(iso: string): string {
   const d = new Date(iso + 'T00:00:00')
@@ -81,7 +76,7 @@ export function CrewActivityCard({ crewId }: Props) {
       <div className="grid grid-cols-3 gap-2">
         <Stat label="지금 집중 중" value={`${data.activeNowCount}명`} />
         <Stat label="오늘 참여" value={`${data.todayParticipantCount}명`} />
-        <Stat label="오늘 합산" value={formatHourMin(data.todayTotalDurationSeconds)} />
+        <Stat label="오늘 합산" value={formatDuration(data.todayTotalDurationSeconds)} />
       </div>
 
       <div className="p-4 rounded-xl border border-border bg-card">
@@ -112,7 +107,7 @@ export function CrewActivityCard({ crewId }: Props) {
                   <span className="w-4 text-muted-foreground">{idx + 1}</span>
                   <span className="font-medium">{r.name}</span>
                 </span>
-                <span className="text-muted-foreground">{formatHourMin(r.totalDurationSeconds)}</span>
+                <span className="text-muted-foreground">{formatDuration(r.totalDurationSeconds)}</span>
               </div>
             ))}
           </div>

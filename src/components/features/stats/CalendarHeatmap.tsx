@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { formatDuration } from '@/lib/formatDuration'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
@@ -27,12 +28,6 @@ function getIntensity(seconds: number): string {
   return 'bg-green-400/90 dark:bg-green-400/80'
 }
 
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (h > 0) return `${h}시간 ${m}분`
-  return `${m}분`
-}
 
 export function CalendarHeatmap({ data, year, month, onMonthChange }: CalendarHeatmapProps) {
   const dataMap = React.useMemo(() => {

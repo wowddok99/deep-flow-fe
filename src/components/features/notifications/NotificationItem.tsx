@@ -38,7 +38,11 @@ export function NotificationItem({ item, onClickAfter, variant = 'popover' }: No
 
     // deep link 이동 (crewId/sessionId 가 있을 때만)
     if (item.crewId && item.sessionId) {
-      router.push(`/app/crews/${item.crewId}/sessions/${item.sessionId}?commentId=${item.commentId}&highlight=true`)
+      // commentId 가 양수일 때만 highlight query 추가 — SSE 임시 음수 / NaN 방어.
+      const query = item.commentId && item.commentId > 0
+        ? `?commentId=${item.commentId}&highlight=true`
+        : ''
+      router.push(`/app/crews/${item.crewId}/sessions/${item.sessionId}${query}`)
     }
     onClickAfter?.()
   }

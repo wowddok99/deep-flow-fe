@@ -13,6 +13,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { UserX } from 'lucide-react'
 import type { CrewMemberInfo } from '@/lib/api'
 import { useKickMember } from '@/hooks/useCrewMutations'
@@ -63,7 +64,17 @@ export function CrewMemberRow({ member, crewId, canKick }: Props) {
             </span>
           )}
           {member.isActiveNow && (
-            <span className="h-1.5 w-1.5 rounded-full bg-green-500" aria-label="지금 집중 중" />
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span
+                  className="h-1.5 w-1.5 rounded-full bg-green-500 cursor-help"
+                  aria-label="지금 집중 중"
+                />
+              </TooltipTrigger>
+              <TooltipContent className="text-xs px-2.5 py-1 font-normal">
+                지금 집중 중
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
         <div className="text-[10px] text-muted-foreground mt-0.5">

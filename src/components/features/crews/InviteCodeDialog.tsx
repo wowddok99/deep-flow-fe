@@ -42,6 +42,9 @@ export function InviteCodeDialog({ crew, open, onOpenChange }: Props) {
   const issue = useIssueInviteCode(crew.id)
   const [now, setNow] = React.useState(() => Date.now())
   const [lastTtl, setLastTtl] = React.useState<InviteTtl>(30)
+  // valid 한 코드가 있는 동안엔 TTL 버튼을 숨겨, 무심코 클릭해서 기존 코드를 폐기하는 사고 방지.
+  // "다른 시간으로" 명시적 진입 시에만 TTL grid 노출.
+  const [reissueExpanded, setReissueExpanded] = React.useState(false)
 
   // 카운트다운 보정용: 응답 수신 시각을 기준으로 잔여 초를 계산해 클라이언트 시계 어긋남 영향을 제거.
   const fetchedAtRef = React.useRef<number>(Date.now())
@@ -68,6 +71,7 @@ export function InviteCodeDialog({ crew, open, onOpenChange }: Props) {
     setLastTtl(ttl)
     try {
       await issue.mutateAsync(ttl)
+      setReissueExpanded(false)
       toast.success('초대 코드를 발급했어요')
     } catch (err) {
       toast.error(crewToastMessage(err, '코드 발급에 실패했습니다'))
@@ -93,21 +97,6 @@ export function InviteCodeDialog({ crew, open, onOpenChange }: Props) {
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="grid grid-cols-4 gap-2">
-            {TTL_OPTIONS.map((opt) => (
-              <Button
-                key={opt.value}
-                variant="outline"
-                size="sm"
-                disabled={issue.isPending}
-                onClick={() => handleIssue(opt.value)}
-                className="cursor-pointer"
-              >
-                {opt.label}
-              </Button>
-            ))}
-          </div>
-
           {isValid ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2 p-3 rounded-lg border border-border bg-muted/40">
@@ -125,21 +114,69 @@ export function InviteCodeDialog({ crew, open, onOpenChange }: Props) {
                 className="flex items-center justify-between text-xs text-muted-foreground"
               >
                 <span>⏱ {formatCountdown(secondsLeft)} 후 만료</span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleIssue(lastTtl)}
-                  disabled={issue.isPending}
-                  className="gap-1.5 cursor-pointer"
-                >
-                  <RotateCw className="h-3 w-3" />
-                  새로 발급
-                </Button>
+                {!reissueExpanded ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReissueExpanded(true)}
+                    disabled={issue.isPending}
+                    className="gap-1.5 cursor-pointer"
+                  >
+                    <RotateCw className="h-3 w-3" />
+                    다른 시간으로 재발급
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setReissueExpanded(false)}
+                    className="cursor-pointer text-muted-foreground"
+                  >
+                    취소
+                  </Button>
+                )}
               </div>
+              {reissueExpanded && (
+                <div className="pt-2 space-y-2 border-t border-border/40">
+                  <p className="text-[11px] text-muted-foreground">
+                    새 코드를 발급하면 기존 코드는 즉시 만료돼요.
+                  </p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {TTL_OPTIONS.map((opt) => (
+                      <Button
+                        key={opt.value}
+                        variant="outline"
+                        size="sm"
+                        disabled={issue.isPending}
+                        onClick={() => handleIssue(opt.value)}
+                        className="cursor-pointer"
+                      >
+                        {opt.label}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
-            <div className="p-6 rounded-lg border border-dashed border-border bg-muted/20 text-center text-sm text-muted-foreground">
-              유효 시간을 선택해 새 초대 코드를 발급하세요
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground text-center">
+                유효 시간을 선택해 새 초대 코드를 발급하세요.
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {TTL_OPTIONS.map((opt) => (
+                  <Button
+                    key={opt.value}
+                    variant="outline"
+                    size="sm"
+                    disabled={issue.isPending}
+                    onClick={() => handleIssue(opt.value)}
+                    className="cursor-pointer"
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
+              </div>
             </div>
           )}
         </div>

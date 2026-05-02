@@ -11,7 +11,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { feedApi, feedKeys, shareApi } from '@/lib/api'
+import { feedApi, feedKeys, shareApi, crewKeys, highlightKeys } from '@/lib/api'
+import { formatDuration } from '@/lib/formatDuration'
 import { getApiErrorCode, getApiErrorMessage } from '@/lib/axios'
 import { useAuthStore } from '@/store/useAuthStore'
 import { ReadOnlyContent } from '@/components/features/editor/ReadOnlyContent'
@@ -60,6 +61,10 @@ export default function SharedSessionPage() {
       queryClient.invalidateQueries({ queryKey: feedKeys.list(crewId) })
       queryClient.invalidateQueries({ queryKey: ['session', sessionId] })
       queryClient.invalidateQueries({ queryKey: ['sessions'] })
+      // 크루 detail (멤버 카운트 / 활성도) + 하이라이트 (HOT / LONG / RECENT) 도 갱신.
+      // 이걸 빼먹으면 철회된 세션이 하이라이트 카드에 한동안 stale 로 남아 클릭 시 dead-end.
+      queryClient.invalidateQueries({ queryKey: crewKeys.detail(crewId) })
+      queryClient.invalidateQueries({ queryKey: highlightKeys.byCrew(crewId) })
       router.push(`/app/crews/${crewId}`)
     },
     onError: (e) => {
@@ -218,10 +223,3 @@ export default function SharedSessionPage() {
   )
 }
 
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (h === 0) return `${m}분`
-  if (m === 0) return `${h}시간`
-  return `${h}시간 ${m}분`
-}

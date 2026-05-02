@@ -42,15 +42,15 @@ export function ShareSessionDialog({
     enabled: open,
   })
 
-  // 다이얼로그 열릴 때 기본 크루 선택 (1개면 자동, 다수면 첫 번째)
+  // 다이얼로그 열릴 때 기본 크루 선택.
+  // 가입 크루가 1개거나 호출부에서 명시한 defaultCrewId 가 있으면 자동 선택.
+  // 2개 이상이면 사용자가 직접 고르게 둠 — 의도와 다른 크루로 발행되는 사고 방지.
   React.useEffect(() => {
     if (!open) return
     if (selectedCrewId !== null) return
     if (defaultCrewId) {
       setSelectedCrewId(defaultCrewId)
     } else if (crews.length === 1) {
-      setSelectedCrewId(crews[0].id)
-    } else if (crews.length > 0) {
       setSelectedCrewId(crews[0].id)
     }
   }, [open, crews, defaultCrewId, selectedCrewId])
@@ -168,14 +168,20 @@ function CrewSelectDropdown({ crews, selectedId, onChange }: CrewSelectProps) {
       </div>
     )
   }
-  // native select 의 브라우저별 chevron 변동성 회피 — appearance-none + lucide ChevronDown 직접 배치
+  // native select 의 브라우저별 chevron 변동성 회피 — appearance-none + lucide ChevronDown 직접 배치.
+  // 미선택 placeholder 옵션을 두어 사용자가 명시적으로 크루를 고르도록 강제.
   return (
     <div className="relative">
       <select
         value={selectedId ?? ''}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) => {
+          const v = e.target.value
+          if (v === '') return
+          onChange(Number(v))
+        }}
         className="w-full h-9 pl-3 pr-9 rounded-md border border-input bg-background text-sm cursor-pointer focus:outline-none focus:ring-1 focus:ring-ring appearance-none"
       >
+        <option value="" disabled>크루를 선택하세요</option>
         {crews.map((c) => (
           <option key={c.id} value={c.id}>{c.name} (멤버 {c.memberCount})</option>
         ))}

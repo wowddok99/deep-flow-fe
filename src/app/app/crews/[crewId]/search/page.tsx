@@ -24,10 +24,16 @@ export default function CrewSearchPage() {
   const [debounced, setDebounced] = React.useState('')
   const [type, setType] = React.useState<SearchType>('session')
 
+  // 태그 모드는 BE 가 # 없이 받기 때문에 사용자가 #spring 입력해도 spring 으로 정규화.
   React.useEffect(() => {
-    const t = setTimeout(() => setDebounced(input.trim()), 300)
+    const normalize = (raw: string) => {
+      const trimmed = raw.trim()
+      if (type === 'tag' && trimmed.startsWith('#')) return trimmed.slice(1).trim()
+      return trimmed
+    }
+    const t = setTimeout(() => setDebounced(normalize(input)), 300)
     return () => clearTimeout(t)
-  }, [input])
+  }, [input, type])
 
   const tooShort = debounced.length > 0 && debounced.length < 2
   const enabled = !tooShort && debounced.length >= 2 && Number.isFinite(crewId)
@@ -78,7 +84,7 @@ export default function CrewSearchPage() {
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="검색어 입력... (2글자 이상)"
+            placeholder={type === 'tag' ? '태그 이름 입력 (예: spring)' : '세션 제목·본문 검색 (2글자 이상)'}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             className="pl-9"

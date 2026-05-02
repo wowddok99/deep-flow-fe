@@ -83,7 +83,12 @@ export default function CrewSearchPage() {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {results.map((c) => (
-                <div key={c.id} className="space-y-2">
+                <div key={c.id} className="space-y-2 relative">
+                  {c.role && (
+                    <span className="absolute top-2 right-2 z-10 text-[10px] font-medium bg-foreground/10 text-foreground rounded-md px-2 py-0.5">
+                      참여 중
+                    </span>
+                  )}
                   <CrewCard crew={c} onClick={() => router.push(`/app/crews/${c.id}`)} />
                   <Button
                     size="sm"

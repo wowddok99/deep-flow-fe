@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { highlightApi, highlightKeys, type CrewHighlight, type HighlightItem } from '@/lib/api'
+import { formatDuration } from '@/lib/formatDuration'
 import { Button } from '@/components/ui/button'
 import { Flame, Clock, Hash, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -95,29 +96,21 @@ function HighlightMature({ data, crewId }: { data: CrewHighlight; crewId: number
 
       {hot && (
         <Row icon={<Flame className="h-3.5 w-3.5 text-orange-500" />} label="가장 뜨거운 글">
-          <Link
-            href={hot.sessionId ? `/app/crews/${crewId}/sessions/${hot.sessionId}` : '#'}
-            className="text-sm hover:underline truncate block"
-          >
-            {hot.title}
+          <HighlightTitle crewId={crewId} sessionId={hot.sessionId} title={hot.title}>
             <span className="inline-flex items-center gap-0.5 ml-2 text-orange-500/80 text-xs align-middle tabular-nums">
               <Flame className="h-3 w-3" /> {Math.round(hot.score ?? 0)}
             </span>
-          </Link>
+          </HighlightTitle>
         </Row>
       )}
 
       {long && (
         <Row icon={<Clock className="h-3.5 w-3.5 text-blue-500" />} label="가장 긴 집중">
-          <Link
-            href={long.sessionId ? `/app/crews/${crewId}/sessions/${long.sessionId}` : '#'}
-            className="text-sm hover:underline truncate block"
-          >
-            {long.title}
+          <HighlightTitle crewId={crewId} sessionId={long.sessionId} title={long.title}>
             <span className="inline-flex items-center gap-0.5 ml-2 text-blue-500/80 text-xs align-middle tabular-nums">
               <Clock className="h-3 w-3" /> {formatDuration(long.durationSeconds ?? 0)}
             </span>
-          </Link>
+          </HighlightTitle>
         </Row>
       )}
 
@@ -133,6 +126,38 @@ function HighlightMature({ data, crewId }: { data: CrewHighlight; crewId: number
         </Row>
       )}
     </div>
+  )
+}
+
+// 세션이 삭제됐거나 공유 철회된 경우 sessionId 가 null 로 응답에 남을 수 있음.
+// 이 때 클릭 시 dead-end (페이지 새로고침만) 가 일어나지 않도록 Link 대신 비활성 span 으로 렌더.
+function HighlightTitle({
+  crewId,
+  sessionId,
+  title,
+  children,
+}: {
+  crewId: number
+  sessionId: number | null | undefined
+  title: string | undefined
+  children: React.ReactNode
+}) {
+  if (!sessionId) {
+    return (
+      <span className="text-sm text-muted-foreground/60 italic truncate block">
+        {title ?? '(삭제된 세션)'}
+        {children}
+      </span>
+    )
+  }
+  return (
+    <Link
+      href={`/app/crews/${crewId}/sessions/${sessionId}`}
+      className="text-sm hover:underline truncate block"
+    >
+      {title}
+      {children}
+    </Link>
   )
 }
 
@@ -161,10 +186,3 @@ function HighlightLink({ item, crewId }: { item: HighlightItem; crewId: number }
   )
 }
 
-function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  if (h === 0) return `${m}m`
-  if (m === 0) return `${h}h`
-  return `${h}h ${m}m`
-}
