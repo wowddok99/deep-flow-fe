@@ -1,9 +1,14 @@
 import axios from 'axios';
+import { toast } from 'sonner';
 
 // Callbacks to access store without importing it (circular dependency)
 let getAccessTokenFn: () => string | null = () => null;
 let logoutFn: () => void = () => { };
 let setTokenFn: (token: string) => void = () => { };
+
+// 추방 / 탈퇴 후 stale 한 크루 화면에서 발생하는 NOT_CREW_MEMBER 응답을
+// 한 번만 처리하도록 가드 (1.5초 redirect 대기 동안 동시 호출 누적 방지).
+let kickedRedirectInProgress = false;
 
 export const setupAxios = (
   getToken: () => string | null,
@@ -74,6 +79,24 @@ api.interceptors.response.use(
         logoutFn();
         return Promise.reject(refreshError);
       }
+    }
+
+    // 크루에서 추방됐거나 탈퇴 후에도 detail 페이지에 머물러 있을 때 발생하는
+    // 403 NOT_CREW_MEMBER 를 잡아 사용자를 크루 목록으로 이동시킨다.
+    // FE only 처리 — SSE 가 강퇴 이벤트를 push 하지 않는 현재 구조에선 다음 호출
+    // 시점에야 알 수 있다는 한계가 있지만, 가장 단순하고 안전한 경로.
+    if (
+      error.response?.status === 403 &&
+      error.response?.data?.error?.code === 'NOT_CREW_MEMBER' &&
+      !kickedRedirectInProgress &&
+      typeof window !== 'undefined' &&
+      /^\/app\/crews\/\d+/.test(window.location.pathname)
+    ) {
+      kickedRedirectInProgress = true;
+      toast.error('이 크루의 멤버가 아니에요. 크루 목록으로 이동할게요.');
+      setTimeout(() => {
+        window.location.href = '/app/crews';
+      }, 1500);
     }
 
     return Promise.reject(error);

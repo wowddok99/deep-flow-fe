@@ -8,30 +8,12 @@ import { useTimerStore } from "@/store/timer-store"
 import { api } from "@/lib/api"
 import { getApiErrorCode } from "@/lib/axios"
 import { cn } from "@/lib/utils"
-import { AchievementToast, type AchievementNotification } from "@/components/features/achievement/AchievementToast"
-import { useAchievementSSE } from "@/hooks/useAchievementSSE"
+// 칭호 SSE 마운트 + 토스트 컨테이너는 app/layout.tsx 의 AchievementBridge 로 이전 (전역).
+// 어느 페이지에 있든 칭호 토스트 수신.
 
 export function Timer() {
   const { isRunning, startTime, sessionId, startTimer, stopTimer } = useTimerStore()
   const [elapsed, setElapsed] = React.useState(0)
-
-  // 칭호 알림 상태
-  const [notifications, setNotifications] = React.useState<AchievementNotification[]>([])
-
-  const dismissNotification = React.useCallback((code: string) => {
-    setNotifications(prev => prev.filter(n => n.code !== code))
-  }, [])
-
-  // SSE로 칭호 알림 수신
-  const handleAchievement = React.useCallback((notification: AchievementNotification) => {
-    setNotifications(prev => {
-      // 중복 방지
-      if (prev.some(n => n.code === notification.code)) return prev
-      return [...prev, notification]
-    })
-  }, [])
-
-  useAchievementSSE({ onAchievement: handleAchievement })
 
   // Sync active session on mount
   React.useEffect(() => {
@@ -179,11 +161,6 @@ export function Timer() {
           )}
         </AnimatePresence>
       </div>
-
-      <AchievementToast
-        notifications={notifications}
-        onDismiss={dismissNotification}
-      />
     </div>
   )
 }

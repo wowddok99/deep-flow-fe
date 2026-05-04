@@ -3,6 +3,7 @@
 import type { SessionSummary } from '@/lib/api'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { formatDuration } from '@/lib/formatDuration'
 import { cn } from '@/lib/utils'
 
 interface SessionCardProps {
@@ -10,13 +11,6 @@ interface SessionCardProps {
   onClick: () => void
   onDelete?: (id: number) => void
   compact?: boolean
-}
-
-function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600)
-  const minutes = Math.floor((seconds % 3600) / 60)
-  if (hours > 0) return `${hours}h ${minutes}m`
-  return `${minutes}m`
 }
 
 export function SessionCard({ session, onClick, onDelete, compact }: SessionCardProps) {

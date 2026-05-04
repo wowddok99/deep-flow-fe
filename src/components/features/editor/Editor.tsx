@@ -33,7 +33,7 @@ export function Editor({ initialContent, title, onChangeTitle, onSave }: EditorP
       },
     }),
     Placeholder.configure({
-      placeholder: 'What are you working on? Capture your flow...',
+      placeholder: '내용을 입력하세요',
     }),
     TaskList,
     TaskItem.configure({
@@ -182,7 +182,7 @@ export function Editor({ initialContent, title, onChangeTitle, onSave }: EditorP
             editor?.commands.focus()
           }
         }}
-        placeholder="Untitled"
+        placeholder="제목"
         className="text-4xl font-bold bg-transparent border-none outline-none px-4 pt-2 pb-2 w-full placeholder:text-muted-foreground/50"
       />
       {/* Use onKeyDownCapture to handle event in capture phase */}

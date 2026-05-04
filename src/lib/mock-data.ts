@@ -58,24 +58,3 @@ export const mockActivity = {
   totalImages: 34,
   avgContentLength: 320,
 }
-
-// 그룹 페이지 mock 데이터
-
-export const mockGroups = [
-  {
-    id: 1,
-    name: '개발 스터디',
-    description: '매일 1시간 이상 집중하는 개발 스터디',
-    memberCount: 5,
-    todayActive: 3,
-    inviteCode: 'ABC123',
-  },
-  {
-    id: 2,
-    name: 'CS 면접 준비',
-    description: 'CS 기초 지식 정리 및 면접 준비',
-    memberCount: 8,
-    todayActive: 2,
-    inviteCode: 'XYZ789',
-  },
-]

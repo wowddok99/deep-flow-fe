@@ -5,9 +5,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Editor } from "./Editor"
 import { api } from "@/lib/api"
-import { Loader2, ChevronRight } from "lucide-react"
+import { Loader2, ChevronRight, Share2, Link2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { extractTextFromContent, extractImageUrls } from "@/lib/utils"
+import { ShareSessionDialog } from "@/components/features/share/ShareSessionDialog"
 
 interface SessionDetailSheetProps {
   sessionId: number | null
@@ -17,6 +18,7 @@ interface SessionDetailSheetProps {
 export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetProps) {
   const queryClient = useQueryClient()
   const [isSaving, setIsSaving] = React.useState(false)
+  const [shareOpen, setShareOpen] = React.useState(false)
 
   const { data: session, isLoading } = useQuery({
     queryKey: ['session', sessionId],
@@ -211,22 +213,50 @@ export function SessionDetailSheet({ sessionId, onClose }: SessionDetailSheetPro
 
         <SheetHeader className="flex flex-col space-y-0 pl-4">
           <div className="flex flex-row items-center justify-between pb-4">
-            <SheetTitle>
-              {isLoading ? "Loading..." : moment(session?.startTime)}
-            </SheetTitle>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                <span>Saved</span>
+            <div className="flex items-center gap-2">
+              <SheetTitle>
+                {isLoading ? "Loading..." : moment(session?.startTime)}
+              </SheetTitle>
+              {session?.sharedCrewId != null && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-muted/60 text-muted-foreground px-2 py-0.5 text-[10px]">
+                  <Link2 className="h-2.5 w-2.5" /> 공유 중
+                </span>
               )}
+            </div>
+            <div className="flex items-center gap-2">
+              {/* 공유 버튼 — 완료된 세션 + 미공유 일 때만 */}
+              {session && session.status === 'COMPLETED' && session.sharedCrewId == null && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 cursor-pointer h-7 text-xs"
+                  onClick={() => setShareOpen(true)}
+                >
+                  <Share2 className="h-3 w-3" /> 크루에 공유
+                </Button>
+              )}
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <span>Saved</span>
+                )}
+              </div>
             </div>
           </div>
           <div className="-mx-px h-px bg-zinc-800" />
         </SheetHeader>
+
+        {sessionId && (
+          <ShareSessionDialog
+            open={shareOpen}
+            onOpenChange={setShareOpen}
+            sessionId={sessionId}
+          />
+        )}
 
         <div className="flex-1 overflow-y-auto pb-4">
           {isLoading ? (

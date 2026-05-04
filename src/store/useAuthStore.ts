@@ -1,11 +1,10 @@
 import { create } from 'zustand';
 import api from '@/lib/axios';
-import { persist } from 'zustand/middleware';
 import { useTimerStore } from './timer-store';
+import { extractUserIdFromToken } from '@/lib/jwt';
 
 interface User {
-    // Add user fields if we decode the token or fetch user profile
-    // specific fields can be added later
+    id: number | null;
     username?: string;
 }
 
@@ -45,19 +44,21 @@ export const useAuthStore = create<AuthState>((set, get) => {
       user: null,
     
       setToken: (token: string) => {
-        set({ accessToken: token, isAuthenticated: true });
+        const userId = extractUserIdFromToken(token);
+        set({ accessToken: token, isAuthenticated: true, user: { id: userId } });
       },
-    
-      login: async (credentials: LoginRequest) => { // Type annotation added
+
+      login: async (credentials: LoginRequest) => {
         const response = await api.post('/auth/login', credentials);
         const { accessToken } = response.data.data;
-        set({ accessToken, isAuthenticated: true });
+        const userId = extractUserIdFromToken(accessToken);
+        set({ accessToken, isAuthenticated: true, user: { id: userId } });
       },
-    
-      signup: async (data: SignupRequest) => { // Type annotation added
+
+      signup: async (data: SignupRequest) => {
         await api.post('/auth/signup', data);
       },
-    
+
       logout: async () => {
         try {
             await api.post('/auth/logout');
@@ -65,17 +66,18 @@ export const useAuthStore = create<AuthState>((set, get) => {
             console.error("Logout failed", e);
         } finally {
             set({ accessToken: null, isAuthenticated: false, user: null });
-            useTimerStore.getState().stopTimer(); // Clear persisted timer state
-            window.location.href = '/'; 
+            useTimerStore.getState().stopTimer();
+            window.location.href = '/';
         }
       },
-    
+
       checkAuth: async () => {
           try {
               const response = await api.post('/auth/reissue');
               const { accessToken } = response.data.data;
-              set({ accessToken, isAuthenticated: true });
-          } catch (e) {
+              const userId = extractUserIdFromToken(accessToken);
+              set({ accessToken, isAuthenticated: true, user: { id: userId } });
+          } catch {
               set({ accessToken: null, isAuthenticated: false });
           }
       }
