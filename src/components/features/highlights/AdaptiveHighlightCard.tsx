@@ -98,7 +98,7 @@ function HighlightMature({ data, crewId }: { data: CrewHighlight; crewId: number
         <Row icon={<Flame className="h-3.5 w-3.5 text-orange-500" />} label="가장 뜨거운 글">
           <HighlightTitle crewId={crewId} sessionId={hot.sessionId} title={hot.title}>
             <span className="inline-flex items-center gap-0.5 ml-2 text-orange-500/80 text-xs align-middle tabular-nums">
-              <Flame className="h-3 w-3" /> {Math.round(hot.score ?? 0)}
+              <Flame className="h-3 w-3" /> {hot.count ?? 0}
             </span>
           </HighlightTitle>
         </Row>
