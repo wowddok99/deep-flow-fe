@@ -1,35 +1,7 @@
 "use client"
 
 import { useQuery } from '@tanstack/react-query'
-import { statsApi } from '@/lib/api'
-
-export function useDashboard() {
-  return useQuery({
-    queryKey: ['stats', 'dashboard'],
-    queryFn: statsApi.dashboard,
-  })
-}
-
-export function useWeeklyTrend(weeks = 4) {
-  return useQuery({
-    queryKey: ['stats', 'weekly-trend', weeks],
-    queryFn: () => statsApi.weeklyTrend(weeks),
-  })
-}
-
-export function useDayOfWeek() {
-  return useQuery({
-    queryKey: ['stats', 'day-of-week'],
-    queryFn: statsApi.dayOfWeek,
-  })
-}
-
-export function useHourly() {
-  return useQuery({
-    queryKey: ['stats', 'hourly'],
-    queryFn: statsApi.hourly,
-  })
-}
+import { statsApi, StatsDashboardAll } from '@/lib/api'
 
 export function useCalendar(year: number, month: number) {
   return useQuery({
@@ -38,9 +10,11 @@ export function useCalendar(year: number, month: number) {
   })
 }
 
-export function useLogActivity() {
-  return useQuery({
-    queryKey: ['stats', 'activity'],
-    queryFn: statsApi.activity,
+/** 통합 Stats 훅 — calendar 제외 5개 API를 단일 요청으로 처리 */
+export function useStatsDashboardAll() {
+  return useQuery<StatsDashboardAll>({
+    queryKey: ['stats', 'all'],
+    queryFn: statsApi.all,
+    staleTime: 60 * 1000,
   })
 }
