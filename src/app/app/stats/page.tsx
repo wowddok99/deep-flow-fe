@@ -6,7 +6,7 @@ import { Clock, ListChecks, TrendingUp, Flame, Trophy, Loader2 } from 'lucide-re
 import { StatCard } from '@/components/features/stats/StatCard'
 import { CalendarHeatmap } from '@/components/features/stats/CalendarHeatmap'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { useDashboard, useWeeklyTrend, useDayOfWeek, useHourly, useCalendar, useLogActivity } from '@/hooks/useStats'
+import { useStatsDashboardAll, useCalendar } from '@/hooks/useStats'
 
 const DAY_LABELS: Record<string, string> = {
   MONDAY: '월', TUESDAY: '화', WEDNESDAY: '수', THURSDAY: '목',
@@ -54,16 +54,18 @@ export default function StatsPage() {
   const [calYear, setCalYear] = React.useState(now.getFullYear())
   const [calMonth, setCalMonth] = React.useState(now.getMonth() + 1)
 
-  const { data: dashboard, isLoading: dashLoading } = useDashboard()
-  const { data: weeklyTrend } = useWeeklyTrend()
-  const { data: dayOfWeek } = useDayOfWeek()
-  const { data: hourly } = useHourly()
+  // 통합 훅: dashboard / weeklyTrend / dayOfWeek / hourly / activity → 단일 API 호출
+  const { data: all, isLoading: allLoading } = useStatsDashboardAll()
   const { data: calendar } = useCalendar(calYear, calMonth)
-  const { data: activity } = useLogActivity()
 
-  const sessionChange = dashboard ? calcChange(dashboard.thisWeekSessions, dashboard.lastWeekSessions) : undefined
+  const dashboard  = all?.dashboard
+  const weeklyTrend = all?.weeklyTrend
+  const dayOfWeek  = all?.dayOfWeek
+  const hourly     = all?.hourly
+  const activity   = all?.activity
+
+  const sessionChange  = dashboard ? calcChange(dashboard.thisWeekSessions, dashboard.lastWeekSessions) : undefined
   const durationChange = dashboard ? calcChange(dashboard.thisWeekDurationSeconds, dashboard.lastWeekDurationSeconds) : undefined
-
 
   const weeklyChartData = weeklyTrend?.map(w => ({
     name: w.weekStart.slice(5),
@@ -85,7 +87,7 @@ export default function StatsPage() {
     세션: h.sessionCount,
   })) ?? []
 
-  if (dashLoading) {
+  if (allLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

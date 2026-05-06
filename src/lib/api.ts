@@ -234,6 +234,17 @@ export const statsApi = {
     const res = await axiosInstance.get<ApiResponse<LogActivity>>('/stats/activity')
     return res.data.data
   },
+  all: async (): Promise<StatsDashboardAll> => {
+    const res = await axiosInstance.get<ApiResponse<StatsDashboardAll>>('/stats/all')
+    return res.data.data
+  },
+}
+export interface StatsDashboardAll {
+  dashboard: DashboardOverview
+  weeklyTrend: WeeklyTrend[]
+  dayOfWeek: DayOfWeekStats[]
+  hourly: HourlyDistribution[]
+  activity: LogActivity
 }
 
 // ============================================================
